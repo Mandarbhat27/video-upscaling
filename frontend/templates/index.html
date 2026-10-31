@@ -1,0 +1,480 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adaptive Real-Time Video Upscaling (OpenMP)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="bg-dark text-light">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-secondary px-4 py-2">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#">
+                <i class="bi bi-cpu-fill text-primary fs-3"></i>
+                <span>Adaptive Real-Time Video Upscaling</span>
+                <span class="badge bg-primary text-uppercase ms-2">OpenMP + C++17</span>
+            </a>
+            <div class="d-flex gap-3 align-items-center">
+                <a href="/" class="btn btn-outline-primary btn-sm active"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
+                <a href="/results" class="btn btn-outline-info btn-sm"><i class="bi bi-graph-up me-1"></i> Benchmark Results</a>
+                <span id="system-status-pill" class="badge bg-success p-2"><i class="bi bi-check-circle-fill me-1"></i> Engine Active</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 py-3">
+        <!-- Mode Toggle & Global Banner -->
+        <div class="row mb-3 align-items-center">
+            <div class="col-md-6">
+                <h5 class="fw-bold mb-1">Quality-Aware Parallel Processing Pipeline</h5>
+                <p class="text-secondary small mb-0">Dynamic computational budget management using OpenMP CPU parallelisation.</p>
+            </div>
+            <div class="col-md-6 d-flex justify-content-end gap-2">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-primary active" id="mode-webcam-btn" onclick="switchMode('webcam')">
+                        <i class="bi bi-camera-video me-1"></i> Live Webcam Mode
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary text-light" id="mode-video-btn" onclick="switchMode('video')">
+                        <i class="bi bi-file-earmark-play me-1"></i> Uploaded Video Mode
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- WEBCAM MODE CONTAINER -->
+        <div id="webcam-section">
+            <!-- Controls Toolbar -->
+            <div class="card bg-black border-secondary mb-3 shadow-sm">
+                <div class="card-body py-2 px-3">
+                    <div class="row g-3 align-items-center">
+                        <!-- Camera Start/Stop -->
+                        <div class="col-auto">
+                            <button id="cam-toggle-btn" class="btn btn-success btn-sm" onclick="toggleCamera()">
+                                <i class="bi bi-play-fill me-1"></i> Start Camera
+                            </button>
+                        </div>
+
+                        <!-- Scale Factor -->
+                        <div class="col-auto border-start border-secondary ps-3">
+                            <label class="small text-secondary d-block">Upscale Factor</label>
+                            <select id="ctrl-scale" class="form-select form-select-sm bg-dark text-light border-secondary" onchange="updateControls()">
+                                <option value="2.0" selected>2x Scaling</option>
+                                <option value="4.0">4x Scaling</option>
+                            </select>
+                        </div>
+
+                        <!-- Mode / Algorithm -->
+                        <div class="col-auto">
+                            <label class="small text-secondary d-block">Processing Policy</label>
+                            <select id="ctrl-policy" class="form-select form-select-sm bg-dark text-light border-secondary" onchange="updateControls()">
+                                <option value="OPENMP_STATIC" selected>OpenMP Static</option>
+                                <option value="OPENMP_DYNAMIC">OpenMP Dynamic</option>
+                                <option value="OPENMP_GUIDED">OpenMP Guided</option>
+                                <option value="SERIAL">Serial Baseline</option>
+                            </select>
+                        </div>
+
+                        <!-- Threads -->
+                        <div class="col-auto">
+                            <label class="small text-secondary d-block">OpenMP Threads</label>
+                            <select id="ctrl-threads" class="form-select form-select-sm bg-dark text-light border-secondary" onchange="updateControls()">
+                                <option value="1">1 Thread</option>
+                                <option value="2">2 Threads</option>
+                                <option value="4" selected>4 Threads</option>
+                                <option value="8">8 Threads</option>
+                                <option value="12">12 Threads (Max)</option>
+                            </select>
+                        </div>
+
+                        <!-- Target FPS -->
+                        <div class="col-auto">
+                            <label class="small text-secondary d-block">Target FPS (Budget)</label>
+                            <select id="ctrl-target-fps" class="form-select form-select-sm bg-dark text-light border-secondary" onchange="updateControls()">
+                                <option value="15">15 FPS (66.7 ms)</option>
+                                <option value="30" selected>30 FPS (33.3 ms)</option>
+                                <option value="60">60 FPS (16.7 ms)</option>
+                            </select>
+                        </div>
+
+                        <!-- Manual or Adaptive -->
+                        <div class="col-auto border-start border-secondary ps-3">
+                            <label class="small text-secondary d-block">Adaptivity</label>
+                            <div class="form-check form-switch mt-1">
+                                <input class="form-check-input" type="checkbox" id="ctrl-adaptive" checked onchange="updateControls()">
+                                <label class="form-check-label small fw-bold text-info" for="ctrl-adaptive">Adaptive Quality</label>
+                            </div>
+                        </div>
+
+                        <!-- Workload Stress Control -->
+                        <div class="col-auto border-start border-secondary ps-3">
+                            <label class="small text-secondary d-block"><i class="bi bi-fire text-warning me-1"></i>Stress Workload</label>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-secondary text-light active" id="wl-normal" onclick="setWorkload('NORMAL')">Normal</button>
+                                <button type="button" class="btn btn-outline-warning" id="wl-increased" onclick="setWorkload('INCREASED')">2x Load</button>
+                                <button type="button" class="btn btn-outline-danger" id="wl-high" onclick="setWorkload('HIGH')">4x Heavy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Telemetry Stats Ribbon -->
+            <div class="row g-2 mb-3">
+                <div class="col-md-2 col-sm-4">
+                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                        <span class="text-secondary small">Processing FPS</span>
+                        <h3 class="fw-bold text-success mb-0" id="stat-fps">--</h3>
+                        <span class="text-muted small" id="stat-target-fps">Target: 30 FPS</span>
+                    </div>
+                </div>
+                <div class="col-md-2 col-sm-4">
+                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                        <span class="text-secondary small">Interp. Latency</span>
+                        <h3 class="fw-bold text-primary mb-0" id="stat-interp-latency">-- ms</h3>
+                        <span class="text-muted small" id="stat-budget">Budget: 33.3 ms</span>
+                    </div>
+                </div>
+                <div class="col-md-2 col-sm-4">
+                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                        <span class="text-secondary small">End-to-End Latency</span>
+                        <h3 class="fw-bold text-info mb-0" id="stat-e2e-latency">-- ms</h3>
+                        <span class="text-muted small">Capture -> Display</span>
+                    </div>
+                </div>
+                <div class="col-md-2 col-sm-4">
+                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                        <span class="text-secondary small">Active Method</span>
+                        <h3 class="fw-bold text-warning mb-0" id="stat-method">BICUBIC</h3>
+                        <span class="badge bg-secondary" id="stat-threads">4 Threads</span>
+                    </div>
+                </div>
+                <div class="col-md-2 col-sm-4">
+                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                        <span class="text-secondary small">Adaptive Status</span>
+                        <div class="mt-1">
+                            <span class="badge bg-success fs-6" id="stat-adaptive-badge">Stable</span>
+                        </div>
+                        <span class="text-muted small" id="stat-switches">0 switches</span>
+                    </div>
+                </div>
+                <div class="col-md-2 col-sm-4">
+                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                        <span class="text-secondary small">Dropped Frames</span>
+                        <h3 class="fw-bold text-danger mb-0" id="stat-dropped">0</h3>
+                        <span class="text-muted small">Stale queue drops</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Enhancement & Quality Analytics Bar -->
+            <div class="card bg-black border-secondary p-2 mb-3">
+                <div class="row align-items-center g-2">
+                    <div class="col-lg-7 d-flex flex-wrap align-items-center gap-2">
+                        <span class="small fw-bold text-info"><i class="bi bi-eye-fill me-1"></i>Visual Inspection:</span>
+                        <button type="button" class="btn btn-outline-info btn-sm active" id="btn-toggle-zoom" onclick="toggleZoomLoupe()">
+                            <i class="bi bi-zoom-in me-1"></i> 4x Pixel Zoom Loupe
+                        </button>
+                        <button type="button" class="btn btn-outline-warning btn-sm" id="btn-toggle-heatmap" onclick="toggleHeatmap()">
+                            <i class="bi bi-fire me-1"></i> Reconstructed Edge Map
+                        </button>
+                        <button type="button" class="btn btn-outline-light btn-sm" id="btn-toggle-native" onclick="toggleNativeView()">
+                            <i class="bi bi-aspect-ratio me-1"></i> 1:1 True Pixel Size
+                        </button>
+                    </div>
+                    <div class="col-lg-5 text-lg-end text-muted small">
+                        <i class="bi bi-cursor-fill me-1"></i> Hover mouse over video to inspect sub-pixel details in real time.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mathematical Enhancement Quality Strip -->
+            <div class="card bg-dark border-secondary p-2 mb-3">
+                <div class="row text-center g-2 small">
+                    <div class="col-md-3 border-end border-secondary">
+                        <span class="text-secondary d-block">Input Pixel Grid</span>
+                        <strong class="text-light" id="stat-raw-px">640x360 (230,400 px)</strong>
+                    </div>
+                    <div class="col-md-3 border-end border-secondary">
+                        <span class="text-secondary d-block">Output Synthesized Grid</span>
+                        <strong class="text-info" id="stat-up-px">1280x720 (921,600 px)</strong>
+                        <span class="badge bg-success ms-1" id="stat-px-gain">+300% Data</span>
+                    </div>
+                    <div class="col-md-3 border-end border-secondary">
+                        <span class="text-secondary d-block">Edge Definition (Laplacian Energy)</span>
+                        <strong class="text-warning" id="stat-edge-gain">Calculating...</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="text-secondary d-block">Interpolation Mathematical Quality</span>
+                        <strong class="text-success" id="stat-quality-tier">BICUBIC (Continuous Catmull-Rom)</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dual Video Comparison Display -->
+            <div class="row g-3 mb-3">
+                <!-- Left: Original Video -->
+                <div class="col-lg-6">
+                    <div class="card bg-black border-secondary h-100">
+                        <div class="card-header bg-dark py-2 d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-light"><i class="bi bi-camera me-1"></i> Original Video (Input)</span>
+                            <span class="badge bg-secondary" id="raw-res-pill">640x360</span>
+                        </div>
+                        <div class="card-body p-0 d-flex justify-content-center align-items-center bg-dark text-center" style="min-height: 380px;">
+                            <img id="raw-video-img" class="img-fluid w-100" src="" alt="Camera Feed Stopped" class="img-fluid w-100" style="display: none; max-height: 480px; object-fit: contain;">
+                            <div id="raw-placeholder" class="p-5 text-secondary">
+                                <i class="bi bi-camera-video-off fs-1 d-block mb-2"></i>
+                                <span>Click <strong>Start Camera</strong> to begin live capture</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Upscaled Video -->
+                <div class="col-lg-6">
+                    <div class="card bg-black border-secondary h-100">
+                        <div class="card-header bg-dark py-2 d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-primary"><i class="bi bi-stars me-1"></i> Upscaled Output (OpenMP C++)</span>
+                            <span class="badge bg-primary" id="upscaled-res-pill">1280x720 (2x)</span>
+                        </div>
+                        <div class="card-body p-0 d-flex justify-content-center align-items-center bg-dark text-center" style="min-height: 380px;">
+                            <img id="upscaled-video-img" class="img-fluid w-100" src="" alt="Upscaled Feed Stopped" class="img-fluid w-100" style="display: none; max-height: 480px; object-fit: contain;">
+                            <div id="upscaled-placeholder" class="p-5 text-secondary">
+                                <i class="bi bi-cpu fs-1 d-block mb-2"></i>
+                                <span>Upscaled frames will render here in real time</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Synchronized 4x Pixel Micro-Inspection Loupe Row -->
+            <div id="zoom-loupe-row" class="row g-3 mb-3">
+                <div class="col-lg-6">
+                    <div class="card bg-black border-secondary p-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small fw-bold text-secondary"><i class="bi bi-grid-3x3 me-1"></i> Original 4x Micro-Zoom (Raw Pixel Grid)</span>
+                            <span class="badge bg-secondary" id="raw-sharpness-badge">Sharpness: --</span>
+                        </div>
+                        <div class="pixel-zoom-preview">
+                            <canvas id="raw-zoom-canvas" width="280" height="140" class="pixel-zoom-canvas pixelated-render"></canvas>
+                        </div>
+                        <span class="small text-muted mt-1 d-block"><i class="bi bi-info-circle me-1"></i>Reveals raw low-res square pixel blocks & aliasing staircases.</span>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card bg-black border-secondary p-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small fw-bold text-primary"><i class="bi bi-magic me-1"></i> OpenMP 4x Micro-Zoom (Synthesized Sub-Pixels)</span>
+                            <span class="badge bg-primary" id="upscaled-sharpness-badge">Sharpness: --</span>
+                        </div>
+                        <div class="pixel-zoom-preview">
+                            <canvas id="upscaled-zoom-canvas" width="280" height="140" class="pixel-zoom-canvas smooth-render"></canvas>
+                        </div>
+                        <span class="small text-muted mt-1 d-block"><i class="bi bi-check-circle me-1 text-success"></i>Reveals smooth continuous sub-pixel curvature synthesized by OpenMP C++.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-time Charts & Adaptive Decision History -->
+            <div class="row g-3">
+                <div class="col-lg-7">
+                    <div class="card bg-black border-secondary h-100">
+                        <div class="card-header bg-dark py-2 d-flex justify-content-between align-items-center">
+                            <span class="fw-bold"><i class="bi bi-activity me-1"></i> Real-Time Performance History</span>
+                            <span class="small text-muted">Last 30 samples</span>
+                        </div>
+                        <div class="card-body p-2">
+                            <div style="height: 220px;">
+                                <canvas id="perfChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="card bg-black border-secondary h-100">
+                        <div class="card-header bg-dark py-2 d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-info"><i class="bi bi-clock-history me-1"></i> Adaptive Decision History</span>
+                            <span class="badge bg-info text-dark" id="decision-count-badge">0 Events</span>
+                        </div>
+                        <div class="card-body p-0 overflow-auto" style="max-height: 240px;">
+                            <table class="table table-dark table-hover table-sm mb-0 small">
+                                <thead class="table-secondary text-secondary">
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Frame</th>
+                                        <th>Transition</th>
+                                        <th>Latency / Budget</th>
+                                        <th>Trigger Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="decision-log-tbody">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-3">No adaptation decisions yet (System running stably).</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- End Webcam Section -->
+
+        <!-- UPLOADED VIDEO MODE CONTAINER -->
+        <div id="video-section" style="display: none;">
+            <div class="row g-3">
+                <!-- Left: Form Controls -->
+                <div class="col-lg-4">
+                    <div class="card bg-black border-secondary">
+                        <div class="card-header bg-dark fw-bold d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-upload me-1"></i> Upload Video File</span>
+                            <span class="badge bg-primary">Offline Mode</span>
+                        </div>
+                        <div class="card-body">
+                            <!-- Quick Test Demo Button -->
+                            <button type="button" class="btn btn-outline-info btn-sm w-100 mb-3" onclick="useDemoVideo()">
+                                <i class="bi bi-lightning-charge-fill me-1"></i> Quick Test: Use Built-in Demo Video (360p)
+                            </button>
+
+                            <form id="video-upload-form" onsubmit="uploadAndProcessVideo(event)">
+                                <div class="mb-3">
+                                    <label class="form-label small text-secondary">Or Upload MP4 / AVI / MOV file</label>
+                                    <input type="file" class="form-control form-control-sm bg-dark text-light border-secondary" id="video-file-input" accept="video/*">
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="small text-secondary">Upscale Factor</label>
+                                        <select id="vid-scale" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                            <option value="2.0" selected>2x Scaling</option>
+                                            <option value="4.0">4x Scaling</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="small text-secondary">Policy</label>
+                                        <select id="vid-policy" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                            <option value="OPENMP_STATIC" selected>OpenMP Static</option>
+                                            <option value="OPENMP_DYNAMIC">OpenMP Dynamic</option>
+                                            <option value="OPENMP_GUIDED">OpenMP Guided</option>
+                                            <option value="SERIAL">Serial Baseline</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="small text-secondary">Method</label>
+                                        <select id="vid-method" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                            <option value="BICUBIC" selected>Bicubic</option>
+                                            <option value="BILINEAR">Bilinear</option>
+                                            <option value="NEAREST">Nearest Neighbour</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="small text-secondary">Threads</label>
+                                        <select id="vid-threads" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                            <option value="1">1 Thread</option>
+                                            <option value="4" selected>4 Threads</option>
+                                            <option value="8">8 Threads</option>
+                                            <option value="12">12 Threads</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="vid-adaptive" checked>
+                                    <label class="form-check-label small fw-bold text-info" for="vid-adaptive">Enable Adaptive Quality</label>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm w-100" id="vid-submit-btn">
+                                    <i class="bi bi-play-circle me-1"></i> Start Processing
+                                </button>
+                            </form>
+
+                            <!-- Progress Box -->
+                            <div id="vid-progress-box" class="mt-4" style="display: none;">
+                                <label class="small text-secondary d-flex justify-content-between mb-1">
+                                    <span id="vid-prog-label">Processing Frames...</span>
+                                    <span id="vid-prog-pct" class="fw-bold text-info">0%</span>
+                                </label>
+                                <div class="progress bg-dark" style="height: 14px;">
+                                    <div id="vid-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" style="width: 0%;"></div>
+                                </div>
+                                <div class="d-flex justify-content-between small text-muted mt-2">
+                                    <span id="vid-stat-frame">Frame: 0/0</span>
+                                    <span id="vid-stat-fps">Speed: 0 FPS</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Video Preview & Live Upscaling View -->
+                <div class="col-lg-8">
+                    <div class="card bg-black border-secondary h-100">
+                        <div class="card-header bg-dark fw-bold d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-display me-1"></i> Video Processing & Reconstructed Output</span>
+                            <div class="d-flex gap-2">
+                                <a id="vid-download-btn" href="/api/download_video" download="upscaled_video.mp4" class="btn btn-success btn-sm" style="display: none;">
+                                    <i class="bi bi-download me-1"></i> Download Output Video (.mp4)
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body d-flex flex-column justify-content-center align-items-center p-3">
+                            <!-- Placeholder -->
+                            <div id="vid-placeholder" class="text-center text-secondary py-5">
+                                <i class="bi bi-film fs-1 d-block mb-3"></i>
+                                <span>Select a video file or click <strong>Quick Test with Built-in Demo Video</strong> to begin upscaling.</span>
+                            </div>
+
+                            <!-- Live Frame Being Processed Preview -->
+                            <div id="vid-live-preview-box" class="w-100 text-center" style="display: none;">
+                                <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-cpu me-1"></i> Live C++ OpenMP Processing Frame</span>
+                                    <span id="vid-live-res-badge" class="badge bg-secondary">Processing...</span>
+                                </div>
+                                <img id="vid-live-frame-img" src="" alt="Processing frame" class="img-fluid rounded border border-secondary w-100" style="max-height: 420px; object-fit: contain; background: #000;">
+                            </div>
+
+                            <!-- Reconstructed Frame Player -->
+                            <div id="vid-player-box" class="w-100 text-center" style="display: none;">
+                                <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Reconstructed Upscaled Output</span>
+                                    <span class="badge bg-primary" id="vid-final-res-badge">Ready</span>
+                                </div>
+                                <img id="vid-player-img" src="" alt="Upscaled Video Frame" class="img-fluid rounded border border-success w-100" style="max-height: 420px; object-fit: contain; background: #000;">
+                                
+                                <!-- Frame Player Controls -->
+                                <div class="d-flex align-items-center gap-2 mt-2 bg-dark p-2 rounded border border-secondary">
+                                    <button type="button" class="btn btn-primary btn-sm" id="vid-play-pause-btn" onclick="togglePlayerPlayback()">
+                                        <i class="bi bi-play-fill" id="play-btn-icon"></i>
+                                    </button>
+                                    <input type="range" class="form-range flex-grow-1" id="vid-frame-slider" min="0" max="0" value="0" oninput="onPlayerSliderChange(this.value)">
+                                    <span class="small text-secondary" id="vid-player-counter">0 / 0</span>
+                                </div>
+                            </div>
+
+                            <!-- Summary Card -->
+                            <div id="vid-summary-card" class="w-100 mt-3 p-3 bg-dark rounded border border-secondary" style="display: none;">
+                                <h6 class="fw-bold text-info mb-2"><i class="bi bi-check2-circle me-1"></i> Processing Completed Successfully</h6>
+                                <div class="row g-2 small text-secondary">
+                                    <div class="col-md-3">Resolution: <strong class="text-light" id="sum-res">--</strong></div>
+                                    <div class="col-md-3">Execution Time: <strong class="text-light" id="sum-time">--</strong></div>
+                                    <div class="col-md-3">Avg Latency: <strong class="text-light" id="sum-lat">--</strong></div>
+                                    <div class="col-md-3">Achieved Speed: <strong class="text-light" id="sum-fps">--</strong></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- End Video Section -->
+
+    </div>
+
+    <!-- Cache-busted JavaScript bundles -->
+    <script src="/static/js/app.js?v=8.0"></script>
+    <script src="/static/js/charts.js?v=8.0"></script>
+</body>
+</html>

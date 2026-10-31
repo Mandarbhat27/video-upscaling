@@ -1,0 +1,49 @@
+﻿# Build directories
+build/
+cmake-build-*/
+*.dir/
+
+# Compiled Binaries and Objects
+*.exe
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+
+# Allow precompiled OpenMP core library for instant out-of-the-box execution
+!backend/bin/adaptive_core.dll
+
+# CMake cache
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# Uploads & Outputs
+uploads/*
+!uploads/.gitkeep
+!uploads/sample_demo.mp4
+outputs/*
+!outputs/.gitkeep
+
+# Benchmark Results (preserve baseline empirical measurements)
+results/*
+!results/.gitkeep
+!results/benchmark_results.json
+!results/benchmark_results.csv
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
