@@ -3,6 +3,9 @@ import sys
 import json
 import time
 import threading
+import base64
+import cv2
+import numpy as np
 from flask import Flask, render_template, Response, request, jsonify, send_file
 from werkzeug.utils import secure_filename
 
@@ -13,6 +16,7 @@ if curr_dir not in sys.path:
 from webcam_streamer import WebcamStreamer
 from video_processor import VideoJobProcessor
 from benchmark_runner import BenchmarkRunner
+from upscaler_engine import NativeUpscaler
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.abspath(os.path.join(curr_dir, '..', 'uploads'))
@@ -26,6 +30,7 @@ os.makedirs(app.config['RESULTS_FOLDER'], exist_ok=True)
 webcam_worker = WebcamStreamer()
 video_processor = VideoJobProcessor()
 benchmark_runner = BenchmarkRunner()
+photo_upscaler = NativeUpscaler()
 
 video_job_status = {
     'current_frame': 0,
@@ -221,6 +226,121 @@ def get_video_preview_frame(idx):
     if frame:
         return Response(frame, mimetype='image/jpeg', headers={'Cache-Control': 'public, max-age=3600'})
     return ('', 404)
+
+
+# --- PHOTO / SNAPSHOT UPSCALE ENDPOINTS ---
+@app.route('/api/upscale_photo', methods=['POST'])
+def upscale_photo():
+    use_sample = request.form.get('use_sample') in ['true', 'True', '1', True]
+    from_webcam = request.form.get('from_webcam') in ['true', 'True', '1', True]
+    
+    img = None
+    filename = 'photo.jpg'
+    
+    if from_webcam:
+        if webcam_worker.raw_frame is not None:
+            img = webcam_worker.raw_frame.copy()
+            filename = f'webcam_snapshot_{int(time.time())}.jpg'
+        else:
+            img = webcam_worker._generate_synthetic_frame()
+            filename = f'webcam_snapshot_{int(time.time())}.jpg'
+    elif use_sample:
+        sample_path = os.path.join(app.config['UPLOAD_FOLDER'], 'sample_interview_snapshot.jpg')
+        if os.path.exists(sample_path):
+            img = cv2.imread(sample_path)
+            filename = 'sample_interview_snapshot.jpg'
+        else:
+            return jsonify({'status': 'error', 'message': 'Sample photo not found'}), 404
+    else:
+        if 'photo' not in request.files:
+            return jsonify({'status': 'error', 'message': 'No photo file provided'}), 400
+        file = request.files['photo']
+        if file.filename == '':
+            return jsonify({'status': 'error', 'message': 'No selected file'}), 400
+        filename = secure_filename(file.filename)
+        save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(save_path)
+        img = cv2.imread(save_path)
+
+    if img is None or img.size == 0:
+        return jsonify({'status': 'error', 'message': 'Could not decode image'}), 400
+
+    scale = float(request.form.get('scale', 2.0))
+    policy = request.form.get('policy', 'OPENMP_STATIC')
+    method = request.form.get('method', 'BICUBIC')
+    threads = int(request.form.get('threads', 4))
+
+    src_h, src_w = img.shape[:2]
+    src_pixels = src_w * src_h
+
+    # Measure edge sharpness of original
+    gray_src = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gx_s = cv2.Sobel(gray_src, cv2.CV_64F, 1, 0)
+    gy_s = cv2.Sobel(gray_src, cv2.CV_64F, 0, 1)
+    src_sharpness = round(float(np.sum(gx_s**2 + gy_s**2)) / 1e9, 2)
+
+    # Upscale with C++ OpenMP native library
+    upscaled, latency_ms = photo_upscaler.upscale(
+        img,
+        scale_factor=scale,
+        method=method,
+        policy=policy,
+        num_threads=threads,
+        chunk_size=16
+    )
+
+    dst_h, dst_w = upscaled.shape[:2]
+    dst_pixels = dst_w * dst_h
+    pixel_gain_pct = round(((dst_pixels - src_pixels) / src_pixels) * 100)
+
+    # Measure edge sharpness of upscaled
+    gray_dst = cv2.cvtColor(upscaled, cv2.COLOR_BGR2GRAY)
+    gx_d = cv2.Sobel(gray_dst, cv2.CV_64F, 1, 0)
+    gy_d = cv2.Sobel(gray_dst, cv2.CV_64F, 0, 1)
+    dst_sharpness = round(float(np.sum(gx_d**2 + gy_d**2)) / 1e9, 2)
+    sharpness_gain_pct = round(((dst_sharpness - src_sharpness) / max(0.01, src_sharpness)) * 100, 1)
+
+    # Save output photo
+    out_filename = f'upscaled_{filename}'
+    out_path = os.path.join(app.config['OUTPUT_FOLDER'], out_filename)
+    cv2.imwrite(out_path, upscaled, [cv2.IMWRITE_JPEG_QUALITY, 95])
+
+    # Base64 data URLs for instant rendering in browser
+    _, src_buf = cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 85])
+    _, dst_buf = cv2.imencode('.jpg', upscaled, [cv2.IMWRITE_JPEG_QUALITY, 90])
+    src_b64 = 'data:image/jpeg;base64,' + base64.b64encode(src_buf.tobytes()).decode('ascii')
+    dst_b64 = 'data:image/jpeg;base64,' + base64.b64encode(dst_buf.tobytes()).decode('ascii')
+
+    return jsonify({
+        'status': 'ok',
+        'src_image_url': src_b64,
+        'dst_image_url': dst_b64,
+        'download_url': f'/api/download_photo?file={out_filename}',
+        'filename': out_filename,
+        'src_resolution': f'{src_w}x{src_h}',
+        'dst_resolution': f'{dst_w}x{dst_h}',
+        'src_pixels': src_pixels,
+        'dst_pixels': dst_pixels,
+        'pixel_gain_pct': f'+{pixel_gain_pct}%',
+        'latency_ms': round(latency_ms, 2),
+        'src_sharpness': src_sharpness,
+        'dst_sharpness': dst_sharpness,
+        'sharpness_gain_pct': f'+{sharpness_gain_pct}%',
+        'method': method,
+        'policy': policy,
+        'threads': 1 if policy == 'SERIAL' else threads
+    })
+
+@app.route('/api/download_photo')
+def download_photo():
+    fn = request.args.get('file', '')
+    if not fn:
+        return jsonify({'error': 'No file specified'}), 400
+    safe_fn = secure_filename(fn)
+    fp = os.path.join(app.config['OUTPUT_FOLDER'], safe_fn)
+    if os.path.exists(fp):
+        return send_file(fp, as_attachment=True, download_name=safe_fn)
+    return jsonify({'error': 'File not found'}), 404
 
 @app.route('/api/download_video')
 def download_video():

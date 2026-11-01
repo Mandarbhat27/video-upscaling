@@ -42,6 +42,9 @@
                     <button type="button" class="btn btn-outline-secondary text-light" id="mode-video-btn" onclick="switchMode('video')">
                         <i class="bi bi-file-earmark-play me-1"></i> Uploaded Video Mode
                     </button>
+                    <button type="button" class="btn btn-outline-secondary text-light" id="mode-photo-btn" onclick="switchMode('photo')">
+                        <i class="bi bi-camera me-1"></i> Photo / Interview Snapshot Mode
+                    </button>
                 </div>
             </div>
         </div>
@@ -471,10 +474,164 @@
             </div>
         </div> <!-- End Video Section -->
 
+        <!-- PHOTO / INTERVIEW SNAPSHOT MODE CONTAINER -->
+        <div id="photo-section" style="display: none;">
+            <div class="row g-3">
+                <!-- Left: Form Controls -->
+                <div class="col-lg-4">
+                    <div class="card bg-black border-secondary">
+                        <div class="card-header bg-dark fw-bold d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-person-bounding-box me-1"></i> Photo / Snapshot Upscaling</span>
+                            <span class="badge bg-warning text-dark">Interview Proctoring</span>
+                        </div>
+                        <div class="card-body">
+                            <!-- Quick Test Demo Buttons -->
+                            <div class="d-grid gap-2 mb-3">
+                                <button type="button" class="btn btn-outline-info btn-sm text-start" onclick="useDemoPhoto()">
+                                    <i class="bi bi-person-vcard-fill text-info me-2"></i><strong>Interview Snapshot Demo (30s Snapshot)</strong>
+                                    <span class="d-block small text-secondary">Upscale low-res proctoring snapshot with ID badge</span>
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-sm text-start" onclick="captureWebcamSnapshot()">
+                                    <i class="bi bi-camera-fill text-success me-2"></i><strong>Capture Live Webcam Snapshot</strong>
+                                    <span class="d-block small text-secondary">Grab current webcam frame and upscale with OpenMP</span>
+                                </button>
+                            </div>
+
+                            <form id="photo-upload-form" onsubmit="uploadAndProcessPhoto(event)">
+                                <div class="mb-3">
+                                    <label class="form-label small text-secondary">Or Upload Any Photo (JPG / PNG / WEBP)</label>
+                                    <input type="file" class="form-control form-control-sm bg-dark text-light border-secondary" id="photo-file-input" accept="image/*">
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="small text-secondary">Upscale Factor</label>
+                                        <select id="photo-scale" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                            <option value="2.0" selected>2x Scaling (4x Pixels)</option>
+                                            <option value="4.0">4x Ultra HD (16x Pixels)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="small text-secondary">Policy</label>
+                                        <select id="photo-policy" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                            <option value="OPENMP_STATIC" selected>OpenMP Static</option>
+                                            <option value="OPENMP_DYNAMIC">OpenMP Dynamic</option>
+                                            <option value="OPENMP_GUIDED">OpenMP Guided</option>
+                                            <option value="SERIAL">Serial Baseline</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="small text-secondary">Method</label>
+                                        <select id="photo-method" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                            <option value="BICUBIC" selected>Bicubic (Best Edge)</option>
+                                            <option value="BILINEAR">Bilinear (Smooth)</option>
+                                            <option value="NEAREST">Nearest Neighbour</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="small text-secondary">Threads</label>
+                                        <select id="photo-threads" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                            <option value="1">1 Thread</option>
+                                            <option value="4">4 Threads</option>
+                                            <option value="8" selected>8 Threads</option>
+                                            <option value="12">12 Threads (Max)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm w-100" id="photo-submit-btn">
+                                    <i class="bi bi-stars me-1"></i> Upscale Photo with OpenMP C++
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Photo Display & Before/After Comparison -->
+                <div class="col-lg-8">
+                    <div class="card bg-black border-secondary h-100">
+                        <div class="card-header bg-dark fw-bold d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-images me-1"></i> Photo Upscaling & Pixel-Level Comparison</span>
+                            <a id="photo-download-btn" href="#" download="upscaled_photo.jpg" class="btn btn-success btn-sm" style="display: none;">
+                                <i class="bi bi-download me-1"></i> Download Upscaled Photo
+                            </a>
+                        </div>
+                        <div class="card-body p-3">
+                            <!-- Placeholder -->
+                            <div id="photo-placeholder" class="text-center text-secondary py-5">
+                                <i class="bi bi-image fs-1 d-block mb-3"></i>
+                                <span>Click <strong>Interview Snapshot Demo</strong>, <strong>Capture Live Webcam Snapshot</strong>, or upload a photo to inspect pixel enhancements.</span>
+                            </div>
+
+                            <!-- Photo Result Content -->
+                            <div id="photo-result-box" style="display: none;">
+                                <!-- Exact Pixel Before & After Highlight Banner -->
+                                <div class="card bg-dark border-secondary p-3 mb-3">
+                                    <div class="row text-center g-2 align-items-center">
+                                        <div class="col-md-5">
+                                            <span class="text-secondary small d-block">BEFORE (Original Input)</span>
+                                            <h5 class="fw-bold text-light mb-0" id="photo-before-res">480x360</h5>
+                                            <span class="badge bg-secondary fs-6 mt-1" id="photo-before-px">172,800 Pixels</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <i class="bi bi-arrow-right-circle-fill text-primary fs-2"></i>
+                                            <span class="d-block small text-info fw-bold" id="photo-scale-badge">2x Scale</span>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <span class="text-secondary small d-block">AFTER (OpenMP Upscaled)</span>
+                                            <h5 class="fw-bold text-info mb-0" id="photo-after-res">960x720</h5>
+                                            <span class="badge bg-success fs-6 mt-1" id="photo-after-px">691,200 Pixels (+300% Data)</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Dual Before / After Cards -->
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <div class="card bg-black border-secondary p-2 h-100">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="small fw-bold text-light"><i class="bi bi-camera me-1"></i> Before (Original)</span>
+                                                <span class="badge bg-secondary" id="photo-src-pill">480x360</span>
+                                            </div>
+                                            <div class="d-flex justify-content-center align-items-center bg-dark rounded overflow-hidden" style="min-height: 280px;">
+                                                <img id="photo-src-img" src="" alt="Before" class="img-fluid rounded" style="max-height: 360px; object-fit: contain;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card bg-black border-secondary p-2 h-100">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="small fw-bold text-primary"><i class="bi bi-stars me-1"></i> After (C++ OpenMP)</span>
+                                                <span class="badge bg-primary" id="photo-dst-pill">960x720</span>
+                                            </div>
+                                            <div class="d-flex justify-content-center align-items-center bg-dark rounded overflow-hidden" style="min-height: 280px;">
+                                                <img id="photo-dst-img" src="" alt="After" class="img-fluid rounded" style="max-height: 360px; object-fit: contain;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Photo Performance Summary -->
+                                <div class="card bg-dark border-secondary p-2">
+                                    <div class="row g-2 text-center small">
+                                        <div class="col-md-3">Compute Latency: <strong class="text-light" id="photo-stat-lat">-- ms</strong></div>
+                                        <div class="col-md-3">Algorithm: <strong class="text-warning" id="photo-stat-method">BICUBIC</strong></div>
+                                        <div class="col-md-3">OpenMP Threads: <strong class="text-info" id="photo-stat-threads">8 Threads</strong></div>
+                                        <div class="col-md-3">Edge Energy Boost: <strong class="text-success" id="photo-stat-sharpness">+0%</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- End Photo Section -->
+
+
     </div>
 
     <!-- Cache-busted JavaScript bundles -->
-    <script src="/static/js/app.js?v=8.0"></script>
-    <script src="/static/js/charts.js?v=8.0"></script>
+    <script src="/static/js/app.js?v=9.0"></script>
+    <script src="/static/js/charts.js?v=9.0"></script>
 </body>
 </html>

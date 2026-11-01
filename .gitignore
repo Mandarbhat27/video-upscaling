@@ -33,6 +33,7 @@ env/
 uploads/*
 !uploads/.gitkeep
 !uploads/sample_demo.mp4
+!uploads/sample_interview_snapshot.jpg
 outputs/*
 !outputs/.gitkeep
 

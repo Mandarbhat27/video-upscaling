@@ -20,23 +20,28 @@ function switchMode(mode) {
     currentMode = mode;
     const webcamSec = document.getElementById('webcam-section');
     const videoSec = document.getElementById('video-section');
+    const photoSec = document.getElementById('photo-section');
     const webcamBtn = document.getElementById('mode-webcam-btn');
     const videoBtn = document.getElementById('mode-video-btn');
+    const photoBtn = document.getElementById('mode-photo-btn');
+
+    [webcamSec, videoSec, photoSec].forEach(sec => { if (sec) sec.style.display = 'none'; });
+    [webcamBtn, videoBtn, photoBtn].forEach(btn => {
+        if (btn) {
+            btn.classList.remove('btn-primary', 'active');
+            btn.classList.add('btn-outline-secondary');
+        }
+    });
 
     if (mode === 'webcam') {
-        webcamSec.style.display = 'block';
-        videoSec.style.display = 'none';
-        webcamBtn.classList.add('btn-primary', 'active');
-        webcamBtn.classList.remove('btn-outline-secondary');
-        videoBtn.classList.remove('btn-primary', 'active');
-        videoBtn.classList.add('btn-outline-secondary');
-    } else {
-        webcamSec.style.display = 'none';
-        videoSec.style.display = 'block';
-        videoBtn.classList.add('btn-primary', 'active');
-        videoBtn.classList.remove('btn-outline-secondary');
-        webcamBtn.classList.remove('btn-primary', 'active');
-        webcamBtn.classList.add('btn-outline-secondary');
+        if (webcamSec) webcamSec.style.display = 'block';
+        if (webcamBtn) { webcamBtn.classList.add('btn-primary', 'active'); webcamBtn.classList.remove('btn-outline-secondary'); }
+    } else if (mode === 'video') {
+        if (videoSec) videoSec.style.display = 'block';
+        if (videoBtn) { videoBtn.classList.add('btn-primary', 'active'); videoBtn.classList.remove('btn-outline-secondary'); }
+    } else if (mode === 'photo') {
+        if (photoSec) photoSec.style.display = 'block';
+        if (photoBtn) { photoBtn.classList.add('btn-primary', 'active'); photoBtn.classList.remove('btn-outline-secondary'); }
     }
 }
 
@@ -353,7 +358,8 @@ function pollMetrics() {
             }
             if (data.upscaled_resolution) {
                 const scale = data.scale_factor || 2.0;
-                document.getElementById('upscaled-res-pill').innerText = data.upscaled_resolution + ' (' + scale + 'x)';
+                document.getElementById('raw-res-pill').innerText = data.raw_resolution + ' (' + (data.raw_pixels || 230400).toLocaleString() + ' px)';
+                document.getElementById('upscaled-res-pill').innerText = data.upscaled_resolution + ' (' + (data.upscaled_pixels || 921600).toLocaleString() + ' px | ' + (data.pixel_gain_pct || '+300%') + ')';
                 document.getElementById('stat-up-px').innerText = data.upscaled_resolution + ' (' + (data.upscaled_pixels || 921600).toLocaleString() + ' px)';
                 document.getElementById('stat-px-gain').innerText = data.pixel_gain_pct || '+300% Data';
             }
@@ -539,7 +545,12 @@ function finishVideoProcessing(data) {
 
     const summaryCard = document.getElementById('vid-summary-card');
     summaryCard.style.display = 'block';
-    document.getElementById('sum-res').innerText = (data.src_resolution || '640x360') + ' -> ' + (data.dst_resolution || '1280x720');
+    const srcParts = (data.src_resolution || '640x360').split('x');
+    const dstParts = (data.dst_resolution || '1280x720').split('x');
+    const srcPx = parseInt(srcParts[0]) * parseInt(srcParts[1]);
+    const dstPx = parseInt(dstParts[0]) * parseInt(dstParts[1]);
+    const pxGain = Math.round(((dstPx - srcPx) / srcPx) * 100);
+    document.getElementById('sum-res').innerText = data.src_resolution + ' (' + srcPx.toLocaleString() + ' px) -> ' + data.dst_resolution + ' (' + dstPx.toLocaleString() + ' px | +' + pxGain + '%)';
     document.getElementById('sum-time').innerText = data.total_time_sec + 's';
     document.getElementById('sum-lat').innerText = data.average_latency_ms + ' ms';
     document.getElementById('sum-fps').innerText = data.achieved_fps + ' FPS';
@@ -589,4 +600,97 @@ function stopPlayerPlayback() {
         clearInterval(playerPlaybackTimer);
         playerPlaybackTimer = null;
     }
+}
+
+
+// PHOTO / INTERVIEW SNAPSHOT UPSCALE LOGIC
+function useDemoPhoto() {
+    startPhotoUpscale({ use_sample: true });
+}
+
+function captureWebcamSnapshot() {
+    startPhotoUpscale({ from_webcam: true });
+}
+
+function uploadAndProcessPhoto(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const fileInput = document.getElementById('photo-file-input');
+    if (!fileInput || !fileInput.files.length) {
+        alert('Please choose a photo file, capture from webcam, or click "Interview Snapshot Demo".');
+        return;
+    }
+    startPhotoUpscale({ file: fileInput.files[0] });
+}
+
+function startPhotoUpscale(options) {
+    const formData = new FormData();
+    if (options.use_sample) {
+        formData.append('use_sample', 'true');
+    } else if (options.from_webcam) {
+        formData.append('from_webcam', 'true');
+    } else {
+        formData.append('photo', options.file);
+    }
+
+    const scale = document.getElementById('photo-scale').value;
+    const policy = document.getElementById('photo-policy').value;
+    const method = document.getElementById('photo-method').value;
+    const threads = document.getElementById('photo-threads').value;
+
+    formData.append('scale', scale);
+    formData.append('policy', policy);
+    formData.append('method', method);
+    formData.append('threads', threads);
+
+    const submitBtn = document.getElementById('photo-submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Upscaling with C++ OpenMP...';
+
+    fetch('/api/upscale_photo', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-stars me-1"></i> Upscale Photo with OpenMP C++';
+
+        if (data.status === 'ok') {
+            document.getElementById('photo-placeholder').style.display = 'none';
+            document.getElementById('photo-result-box').style.display = 'block';
+
+            // Exact Pixel Count Before & After
+            document.getElementById('photo-before-res').innerText = data.src_resolution;
+            document.getElementById('photo-before-px').innerText = Number(data.src_pixels).toLocaleString() + ' Pixels';
+            document.getElementById('photo-after-res').innerText = data.dst_resolution;
+            document.getElementById('photo-after-px').innerText = Number(data.dst_pixels).toLocaleString() + ' Pixels (' + data.pixel_gain_pct + ' Data)';
+            document.getElementById('photo-scale-badge').innerText = scale + 'x Upscale';
+
+            // Images and pills
+            document.getElementById('photo-src-img').src = data.src_image_url;
+            document.getElementById('photo-dst-img').src = data.dst_image_url;
+            document.getElementById('photo-src-pill').innerText = data.src_resolution + ' (' + Number(data.src_pixels).toLocaleString() + ' px)';
+            document.getElementById('photo-dst-pill').innerText = data.dst_resolution + ' (' + Number(data.dst_pixels).toLocaleString() + ' px - ' + data.pixel_gain_pct + ')';
+
+            // Performance & Sharpness metrics
+            document.getElementById('photo-stat-lat').innerText = data.latency_ms + ' ms';
+            document.getElementById('photo-stat-method').innerText = data.method;
+            document.getElementById('photo-stat-threads').innerText = data.threads + ' Threads (' + data.policy + ')';
+            document.getElementById('photo-stat-sharpness').innerText = data.src_sharpness + ' -> ' + data.dst_sharpness + ' (' + data.sharpness_gain_pct + ')';
+
+            // Download Button
+            const dlBtn = document.getElementById('photo-download-btn');
+            dlBtn.style.display = 'inline-block';
+            dlBtn.href = data.download_url;
+            dlBtn.download = data.filename || 'upscaled_photo.jpg';
+        } else {
+            alert('Upscale failed: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(err => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-stars me-1"></i> Upscale Photo with OpenMP C++';
+        alert('Network error during photo upscale: ' + err);
+        console.error(err);
+    });
 }
