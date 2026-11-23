@@ -229,12 +229,12 @@ __declspec(dllexport) double enhance_edges_cpp(
         return (omp_get_wtime() - t_start) * 1000.0;
     }
 
-    // 8-neighbourhood contrast-adaptive unsharp sharpening + micro-contrast boost
-    float w = strength * 0.65f;
-    float w_diag = -w * 0.25f;
-    float w_ortho = -w * 0.5f;
-    float w_center = 1.0f + 3.0f * w;
-    float cboost = (strength > 0.4f) ? (1.0f + 0.065f * std::min(strength, 2.5f)) : 1.0f;
+    // 8-neighbourhood normalized high-pass sharpening + micro-contrast boost
+    float w = strength * 0.28f;
+    float w_diag = -0.5f * w;
+    float w_ortho = -w;
+    float w_center = 1.0f + 6.0f * w;
+    float cboost = (strength > 0.3f) ? (1.0f + 0.055f * std::min(strength, 2.5f)) : 1.0f;
 
     // Boundary copy (row 0 and row height - 1)
     for (int c = 0; c < channels; ++c) {

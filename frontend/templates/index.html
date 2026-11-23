@@ -408,7 +408,7 @@
                                     </select>
                                 </div>
                                 <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" id="vid-adaptive" checked>
+                                    <input class="form-check-input" type="checkbox" id="vid-adaptive">
                                     <label class="form-check-label small fw-bold text-info" for="vid-adaptive">Enable Adaptive Quality</label>
                                 </div>
                                 <button type="submit" class="btn btn-primary btn-sm w-100" id="vid-submit-btn">
@@ -467,7 +467,31 @@
                                     <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Reconstructed Upscaled Output</span>
                                     <span class="badge bg-primary" id="vid-final-res-badge">Ready</span>
                                 </div>
-                                <img id="vid-player-img" src="" alt="Upscaled Video Frame" class="img-fluid rounded border border-success w-100" style="max-height: 420px; object-fit: contain; background: #000;">
+                                <!-- Interactive Before/After Split Wipe Video Player -->
+                                <div id="vid-split-container" class="position-relative overflow-hidden rounded border border-info shadow-lg w-100" style="height: 440px; background: #0b0e14; cursor: ew-resize; user-select: none;">
+                                    <!-- Upscaled (After) Frame -->
+                                    <img id="vid-player-after-img" src="" alt="Upscaled Video" class="position-absolute top-50 start-50 translate-middle" style="max-height: 100%; max-width: 100%; object-fit: contain; pointer-events: none;">
+                                    <div class="position-absolute top-0 end-0 m-2" style="z-index: 5;">
+                                        <span class="badge bg-success shadow px-2 py-1"><i class="bi bi-stars me-1"></i> AFTER: C++ OpenMP Enhanced (<span id="vid-split-dst-res">Upscaled</span>)</span>
+                                    </div>
+
+                                    <!-- Original (Before) Frame Clipped -->
+                                    <img id="vid-player-before-img" src="" alt="Original Video" class="position-absolute top-50 start-50 translate-middle" style="max-height: 100%; max-width: 100%; object-fit: contain; pointer-events: none; clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);">
+                                    <div class="position-absolute top-0 start-0 m-2" style="z-index: 5;">
+                                        <span class="badge bg-secondary shadow px-2 py-1"><i class="bi bi-camera-video me-1"></i> BEFORE: Original (<span id="vid-split-src-res">Input</span>)</span>
+                                    </div>
+
+                                    <!-- Divider Line with Circular Grab Handle -->
+                                    <div id="vid-split-divider" class="position-absolute top-0 bottom-0" style="left: 50%; width: 4px; background: #00d2ff; box-shadow: 0 0 12px #00d2ff; z-index: 10; pointer-events: none;">
+                                        <div class="position-absolute top-50 start-50 translate-middle rounded-circle bg-primary text-white d-flex align-items-center justify-content-center shadow" style="width: 36px; height: 36px; border: 2px solid #fff; font-size: 13px; font-weight: bold;">
+                                            ◄►
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between text-muted small px-1 my-1">
+                                    <span><i class="bi bi-arrow-left-right me-1 text-info"></i> Drag slider across video to compare raw soft input vs C++ OpenMP enhanced output in real-time</span>
+                                    <span class="text-info fw-bold" id="vid-split-pos-label">Divider: 50%</span>
+                                </div>
                                 
                                 <!-- Frame Player Controls -->
                                 <div class="d-flex align-items-center gap-2 mt-2 bg-dark p-2 rounded border border-secondary">
@@ -717,7 +741,7 @@
     </div>
 
     <!-- Cache-busted JavaScript bundles -->
-    <script src="/static/js/app.js?v=12.0"></script>
+    <script src="/static/js/app.js?v=13.0"></script>
     <script src="/static/js/charts.js?v=12.0"></script>
 </body>
 </html>

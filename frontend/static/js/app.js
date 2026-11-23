@@ -543,6 +543,12 @@ function finishVideoProcessing(data) {
     slider.value = 0;
     document.getElementById('vid-player-counter').innerText = 'Frame 1 / ' + totalPreviewFrames;
     document.getElementById('vid-final-res-badge').innerText = (data.dst_resolution || 'Upscaled') + ' (' + totalPreviewFrames + ' frames)';
+    const splitSrc = document.getElementById('vid-split-src-res');
+    const splitDst = document.getElementById('vid-split-dst-res');
+    if (splitSrc) splitSrc.innerText = data.src_resolution || 'Original';
+    if (splitDst) splitDst.innerText = data.dst_resolution || 'Upscaled';
+    setVidSplitPosition(50);
+    initVidSplitSliderOnce();
 
     loadPlayerFrame(0);
 
@@ -567,7 +573,15 @@ function finishVideoProcessing(data) {
 
 function loadPlayerFrame(idx) {
     currentPreviewFrame = idx;
-    document.getElementById('vid-player-img').src = '/api/video_preview_frame/' + idx;
+    const afterImg = document.getElementById('vid-player-after-img');
+    const beforeImg = document.getElementById('vid-player-before-img');
+    if (afterImg) afterImg.src = '/api/video_preview_frame/' + idx;
+    if (beforeImg) beforeImg.src = '/api/video_raw_preview_frame/' + idx;
+    
+    // Fallback if single img exists
+    const singleImg = document.getElementById('vid-player-img');
+    if (singleImg) singleImg.src = '/api/video_preview_frame/' + idx;
+
     document.getElementById('vid-frame-slider').value = idx;
     document.getElementById('vid-player-counter').innerText = 'Frame ' + (idx + 1) + ' / ' + totalPreviewFrames;
 }
@@ -924,4 +938,72 @@ function stopAutoWipe() {
         clearInterval(autoWipeTimer);
         autoWipeTimer = null;
     }
+}
+
+
+// VIDEO PLAYER SPLIT-SCREEN WIPE LOGIC
+let isVidSplitDragging = false;
+
+function setVidSplitPosition(pct) {
+    pct = Math.max(0, Math.min(100, pct));
+    const beforeImg = document.getElementById('vid-player-before-img');
+    const divider = document.getElementById('vid-split-divider');
+    const label = document.getElementById('vid-split-pos-label');
+
+    if (beforeImg) {
+        beforeImg.style.clipPath = 'polygon(0 0, ' + pct + '% 0, ' + pct + '% 100%, 0 100%)';
+    }
+    if (divider) {
+        divider.style.left = pct + '%';
+    }
+    if (label) {
+        label.innerText = 'Divider: ' + Math.round(pct) + '%';
+    }
+}
+
+let vidSplitSliderInitialized = false;
+function initVidSplitSliderOnce() {
+    if (vidSplitSliderInitialized) return;
+    const container = document.getElementById('vid-split-container');
+    if (!container) return;
+    vidSplitSliderInitialized = true;
+
+    function handleMove(clientX) {
+        const rect = container.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const pct = (x / rect.width) * 100;
+        setVidSplitPosition(pct);
+    }
+
+    container.addEventListener('mousedown', (e) => {
+        isVidSplitDragging = true;
+        handleMove(e.clientX);
+    });
+
+    window.addEventListener('mouseup', () => {
+        isVidSplitDragging = false;
+    });
+
+    container.addEventListener('mousemove', (e) => {
+        if (isVidSplitDragging) {
+            handleMove(e.clientX);
+        }
+    });
+
+    container.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 0) {
+            isVidSplitDragging = true;
+            handleMove(e.touches[0].clientX);
+        }
+    }, { passive: true });
+
+    container.addEventListener('touchmove', (e) => {
+        if (isVidSplitDragging && e.touches.length > 0) {
+            handleMove(e.touches[0].clientX);
+        }
+    }, { passive: true });
+
+    window.addEventListener('touchend', () => {
+        isVidSplitDragging = false;
+    });
 }

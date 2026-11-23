@@ -15,6 +15,11 @@ class VideoJobProcessor:
     def get_latest_frame(self):
         return self.latest_frame_jpeg
 
+    def get_raw_preview_frame(self, index):
+        if 0 <= index < len(self.preview_raw_frames):
+            return self.preview_raw_frames[index]
+        return None
+
     def get_preview_frame(self, index):
         if 0 <= index < len(self.preview_frames):
             return self.preview_frames[index]
@@ -25,6 +30,7 @@ class VideoJobProcessor:
                      enhancement=1.6, progress_callback=None):
         self.is_processing = True
         self.preview_frames = []
+        self.preview_raw_frames = []
         self.latest_frame_jpeg = None
 
         try:
@@ -85,14 +91,16 @@ class VideoJobProcessor:
 
                 out_writer.write(upscaled)
 
-                # Store latest frame preview JPEG
-                _, up_jpg = cv2.imencode(".jpg", upscaled, [cv2.IMWRITE_JPEG_QUALITY, 75])
+                # Store latest frame preview JPEG at high visual quality (92%)
+                _, up_jpg = cv2.imencode(".jpg", upscaled, [cv2.IMWRITE_JPEG_QUALITY, 92])
                 jpg_bytes = up_jpg.tobytes()
                 self.latest_frame_jpeg = jpg_bytes
 
-                # Store sampled preview frames for browser playback (max 150 frames)
+                # Store both upscaled and original raw preview frames for side-by-side / split inspection
                 if len(self.preview_frames) < 150:
+                    _, raw_jpg = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 90])
                     self.preview_frames.append(jpg_bytes)
+                    self.preview_raw_frames.append(raw_jpg.tobytes())
 
                 if progress_callback and (processed_count % 3 == 0 or processed_count == total_frames):
                     avg_lat = total_interp_latency / processed_count

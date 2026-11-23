@@ -223,6 +223,13 @@ def get_video_current_frame():
         return Response(frame, mimetype='image/jpeg', headers={'Cache-Control': 'no-cache, no-store'})
     return ('', 204)
 
+@app.route('/api/video_raw_preview_frame/<int:idx>')
+def get_video_raw_preview_frame(idx):
+    frame = video_processor.get_raw_preview_frame(idx)
+    if frame:
+        return Response(frame, mimetype='image/jpeg', headers={'Cache-Control': 'public, max-age=3600'})
+    return ('', 404)
+
 @app.route('/api/video_preview_frame/<int:idx>')
 def get_video_preview_frame(idx):
     frame = video_processor.get_preview_frame(idx)
