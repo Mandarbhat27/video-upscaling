@@ -14,6 +14,7 @@ if os.path.exists(bin_dir):
         pass
 
 dll_candidates = [
+    r'C:\Users\Mandar\.gemini\antigravity-ide\scratch\adaptive-video-upscaling\backend\bin\adaptive_core_v3.dll',
     r'C:\Users\Mandar\.gemini\antigravity-ide\scratch\adaptive-video-upscaling\backend\bin\adaptive_core_v2.dll',
     r'C:\Users\Mandar\.gemini\antigravity-ide\scratch\adaptive-video-upscaling\backend\bin\adaptive_core.dll',
     r'C:\Users\Mandar\.gemini\antigravity\scratch\adaptive_core.dll'

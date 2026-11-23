@@ -19,7 +19,7 @@ function initCharts() {
                 },
                 {
                     label: 'Frame Budget (ms)',
-                    data: Array(30).fill(33.33),
+                    data: Array(30).fill(8.33),
                     borderColor: '#dc3545',
                     borderWidth: 1.5,
                     borderDash: [5, 5],
@@ -64,7 +64,7 @@ function initCharts() {
                     grid: { drawOnChartArea: false },
                     ticks: { color: '#8b949e' },
                     min: 0,
-                    suggestedMax: 100
+                    suggestedMax: 150
                 }
             },
             plugins: {

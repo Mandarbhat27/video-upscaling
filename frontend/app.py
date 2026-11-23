@@ -110,7 +110,7 @@ def gen_mjpeg_raw():
                    b'Content-Type: image/jpeg\r\n'
                    b'Content-Length: ' + str(len(frame_bytes)).encode('ascii') + b'\r\n\r\n' +
                    frame_bytes + b'\r\n')
-        time.sleep(0.033)
+        time.sleep(max(0.005, 1.0 / (webcam_worker.target_fps * 1.15)))
 
 def gen_mjpeg_upscaled():
     waited = 0
@@ -125,7 +125,7 @@ def gen_mjpeg_upscaled():
                    b'Content-Type: image/jpeg\r\n'
                    b'Content-Length: ' + str(len(frame_bytes)).encode('ascii') + b'\r\n\r\n' +
                    frame_bytes + b'\r\n')
-        time.sleep(0.033)
+        time.sleep(max(0.005, 1.0 / (webcam_worker.target_fps * 1.15)))
 
 @app.route('/video_feed/raw')
 def video_feed_raw():

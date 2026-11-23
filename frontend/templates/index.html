@@ -88,8 +88,8 @@
                             <select id="ctrl-threads" class="form-select form-select-sm bg-dark text-light border-secondary" onchange="updateControls()">
                                 <option value="1">1 Thread</option>
                                 <option value="2">2 Threads</option>
-                                <option value="4" selected>4 Threads</option>
-                                <option value="8">8 Threads</option>
+                                <option value="4">4 Threads</option>
+                                <option value="8" selected>8 Threads (Optimal)</option>
                                 <option value="12">12 Threads (Max)</option>
                             </select>
                         </div>
@@ -108,10 +108,11 @@
                         <!-- Target FPS -->
                         <div class="col-auto">
                             <label class="small text-secondary d-block">Target FPS (Budget)</label>
-                            <select id="ctrl-target-fps" class="form-select form-select-sm bg-dark text-light border-secondary" onchange="updateControls()">
-                                <option value="15">15 FPS (66.7 ms)</option>
-                                <option value="30" selected>30 FPS (33.3 ms)</option>
+                            <select id="ctrl-target-fps" class="form-select form-select-sm bg-dark text-warning border-warning fw-bold" onchange="updateControls()">
+                                <option value="120" selected>⚡ 120 FPS (8.3 ms - Ultra Speed)</option>
                                 <option value="60">60 FPS (16.7 ms)</option>
+                                <option value="30">30 FPS (33.3 ms)</option>
+                                <option value="15">15 FPS (66.7 ms)</option>
                             </select>
                         </div>
 
@@ -716,7 +717,7 @@
     </div>
 
     <!-- Cache-busted JavaScript bundles -->
-    <script src="/static/js/app.js?v=11.0"></script>
-    <script src="/static/js/charts.js?v=10.0"></script>
+    <script src="/static/js/app.js?v=12.0"></script>
+    <script src="/static/js/charts.js?v=12.0"></script>
 </body>
 </html>

@@ -139,12 +139,14 @@ function startCameraPollingFallback() {
     const rawImg = document.getElementById('raw-video-img');
     const upscaledImg = document.getElementById('upscaled-video-img');
 
+    const targetFpsVal = parseFloat(document.getElementById('ctrl-target-fps') ? document.getElementById('ctrl-target-fps').value : 120);
+    const pollIntervalMs = targetFpsVal >= 120 ? 8 : (targetFpsVal >= 60 ? 16 : 33);
     cameraPollInterval = setInterval(() => {
         if (!cameraActive) return;
         const ts = Date.now();
         rawImg.src = '/api/camera/frame/raw?ts=' + ts;
         upscaledImg.src = '/api/camera/frame/upscaled?ts=' + ts;
-    }, 40);
+    }, pollIntervalMs);
 }
 
 function updateControls() {

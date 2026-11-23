@@ -294,7 +294,7 @@ __declspec(dllexport) double enhance_edges_cpp(
     return (t_end - t_start) * 1000.0;
 }
 
-// Unified Super-Resolution: Sub-pixel Interpolation + OpenMP Edge Sharpening
+// Unified Super-Resolution: Sub-pixel Interpolation + OpenMP Edge Sharpening (Zero-Allocation Fast Path)
 __declspec(dllexport) double upscale_and_enhance_cpp(
     const uint8_t* src, int src_w, int src_h, int channels,
     uint8_t* dst, int dst_w, int dst_h,
@@ -306,10 +306,13 @@ __declspec(dllexport) double upscale_and_enhance_cpp(
     }
 
     size_t total_bytes = static_cast<size_t>(dst_w) * dst_h * channels;
-    std::vector<uint8_t> temp_buf(total_bytes);
+    static thread_local std::vector<uint8_t> tls_temp_buf;
+    if (tls_temp_buf.size() < total_bytes) {
+        tls_temp_buf.resize(total_bytes);
+    }
 
-    double t1 = upscale_frame_cpp(src, src_w, src_h, channels, temp_buf.data(), dst_w, dst_h, method, policy, num_threads, chunk_size);
-    double t2 = enhance_edges_cpp(temp_buf.data(), dst, dst_w, dst_h, channels, enhancement_strength, policy, num_threads, chunk_size);
+    double t1 = upscale_frame_cpp(src, src_w, src_h, channels, tls_temp_buf.data(), dst_w, dst_h, method, policy, num_threads, chunk_size);
+    double t2 = enhance_edges_cpp(tls_temp_buf.data(), dst, dst_w, dst_h, channels, enhancement_strength, policy, num_threads, chunk_size);
     return t1 + t2;
 }
 

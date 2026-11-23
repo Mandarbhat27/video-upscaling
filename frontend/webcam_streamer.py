@@ -6,10 +6,19 @@ import numpy as np
 from upscaler_engine import NativeUpscaler
 from adaptive_engine import AdaptiveEngine
 
+def precise_sleep(duration):
+    if duration <= 0.0 or duration > 1.0:
+        return
+    target = time.perf_counter() + duration
+    if duration > 0.003:
+        time.sleep(duration - 0.002)
+    while time.perf_counter() < target:
+        pass
+
 class WebcamStreamer:
     def __init__(self):
         self.upscaler = NativeUpscaler()
-        self.adaptive_engine = AdaptiveEngine(target_fps=30.0, window_size=10, cooldown_frames=12)
+        self.adaptive_engine = AdaptiveEngine(target_fps=120.0, window_size=10, cooldown_frames=12)
 
         self.cap = None
         self.is_running = False
@@ -21,9 +30,10 @@ class WebcamStreamer:
         self.policy = 'OPENMP_STATIC'
         self.num_threads = 4
         self.chunk_size = 16
-        self.target_fps = 30.0
+        self.target_fps = 120.0
         self.workload_multiplier = 1
-        self.enhancement_strength = 1.6  # OpenMP edge sharpening strength
+        self.enhancement_strength = 2.0
+        self.num_threads = 8  # OpenMP edge sharpening strength
         self.show_heatmap = False
 
         # Synchronisation
@@ -32,6 +42,7 @@ class WebcamStreamer:
         self.raw_frame = None
         self.raw_capture_time = 0.0
         self.new_raw_available = False
+        self.frame_event = threading.Event()
 
         self.latest_raw_jpeg = None
         self.latest_upscaled_jpeg = None
@@ -176,20 +187,29 @@ class WebcamStreamer:
                     cv2.rectangle(img, (x, y), (x + 8, y + 8), (240, 240, 240), -1)
         cv2.putText(img, '8px Checkerboard', (30, 240), cv2.FONT_HERSHEY_SIMPLEX, 0.38, (160, 160, 160), 1)
 
-        cur_time_str = time.strftime('%H:%M:%S')
-        cv2.putText(img, 'ADAPTIVE VIDEO UPSCALING', (20, 35), cv2.FONT_HERSHEY_SIMPLEX, 0.72, (255, 255, 255), 2)
-        cv2.putText(img, f'Resolution Test Stream | Time: {cur_time_str} | Frame: {self.captured_count}', (20, 58), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (0, 255, 200), 1)
-        cv2.putText(img, 'C++ OpenMP Enhanced Super-Resolution Pipeline', (20, 78), cv2.FONT_HERSHEY_SIMPLEX, 0.38, (0, 255, 255), 1)
-        cv2.putText(img, 'Fine Text: ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789', (20, 96), cv2.FONT_HERSHEY_SIMPLEX, 0.33, (255, 255, 0), 1)
-        cv2.putText(img, 'Microscopic 6pt Test (Edge Sharpening + Bicubic Catmull-Rom)', (20, 112), cv2.FONT_HERSHEY_SIMPLEX, 0.28, (150, 255, 150), 1)
+        cur_time_str = time.strftime('%H:%M:%S') + f'.{int((t % 1) * 1000):03d}'
+        cv2.putText(img, 'ULTRA HIGH-SPEED 120 FPS PARALLEL SUPER-RESOLUTION', (20, 35), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 255, 255), 2)
+        cv2.putText(img, f'Resolution: 640x360 -> 1280x720 | 120 FPS Budget: 8.33ms | Time: {cur_time_str}', (20, 58), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (0, 255, 200), 1)
+        cv2.putText(img, f'Frame: #{self.captured_count} | C++ AVX2/FMA + OpenMP Parallel Edge Reconstruction', (20, 78), cv2.FONT_HERSHEY_SIMPLEX, 0.38, (255, 200, 50), 1)
+        cv2.putText(img, 'Clarity Test: ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789 [ID: #PRO-9982X]', (20, 98), cv2.FONT_HERSHEY_SIMPLEX, 0.36, (255, 255, 255), 1)
+        cv2.putText(img, 'Sub-Pixel Micro-Text: Catmull-Rom Keys Spline + Contrast-Adaptive Boost', (20, 116), cv2.FONT_HERSHEY_SIMPLEX, 0.30, (100, 255, 100), 1)
 
         cv2.rectangle(img, (10, 10), (w - 10, h - 10), (100, 100, 120), 1)
         return img
 
     def _capture_worker(self):
-        target_interval = 1.0 / self.target_fps
+        target_interval = 1.0 / max(1.0, self.target_fps)
+        next_frame_time = time.perf_counter()
         while self.is_running:
-            t0 = time.time()
+            now = time.perf_counter()
+            if now < next_frame_time:
+                rem = next_frame_time - now
+                if rem > 0.002:
+                    time.sleep(rem - 0.001)
+                continue
+
+            next_frame_time = now + target_interval
+
             if self.use_synthetic:
                 frame = self._generate_synthetic_frame()
                 ret = True
@@ -197,7 +217,7 @@ class WebcamStreamer:
                 ret, frame = self.cap.read()
 
             if not ret or frame is None:
-                time.sleep(0.01)
+                time.sleep(0.002)
                 continue
 
             cap_time = time.time()
@@ -209,11 +229,7 @@ class WebcamStreamer:
                 self.raw_frame = frame
                 self.raw_capture_time = cap_time
                 self.new_raw_available = True
-
-            elapsed = time.time() - t0
-            sleep_time = target_interval - elapsed
-            if sleep_time > 0.001:
-                time.sleep(sleep_time)
+                self.frame_event.set()
 
     def _process_worker(self):
         while self.is_running:
@@ -225,7 +241,6 @@ class WebcamStreamer:
                     frame_to_upscale = self.raw_frame
                     cap_time = self.raw_capture_time
                     self.new_raw_available = False
-
             if frame_to_upscale is None:
                 time.sleep(0.002)
                 continue
