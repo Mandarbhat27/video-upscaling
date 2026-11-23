@@ -94,6 +94,17 @@
                             </select>
                         </div>
 
+                        <!-- Edge Sharpening Boost -->
+                        <div class="col-auto">
+                            <label class="small text-warning d-block"><i class="bi bi-magic me-1"></i>Detail Boost</label>
+                            <select id="ctrl-enhancement" class="form-select form-select-sm bg-dark text-warning border-warning" onchange="updateControls()">
+                                <option value="1.6" selected>⚡ Ultra Crisp (+1.6x)</option>
+                                <option value="2.0">🔥 Maximum (+2.0x)</option>
+                                <option value="1.0">🌿 Natural (+1.0x)</option>
+                                <option value="0.0">⚪ Off (0.0x)</option>
+                            </select>
+                        </div>
+
                         <!-- Target FPS -->
                         <div class="col-auto">
                             <label class="small text-secondary d-block">Target FPS (Budget)</label>
@@ -386,6 +397,15 @@
                                         </select>
                                     </div>
                                 </div>
+                                <div class="mb-3">
+                                    <label class="small text-warning fw-bold"><i class="bi bi-magic me-1"></i> OpenMP Edge & Detail Enhancement</label>
+                                    <select id="vid-enhancement" class="form-select form-select-sm bg-dark text-warning border-warning">
+                                        <option value="1.6" selected>⚡ Ultra Crisp (+1.6x - Recommended)</option>
+                                        <option value="2.0">🔥 Maximum Sharpness (+2.0x)</option>
+                                        <option value="1.0">🌿 Natural Detail (+1.0x)</option>
+                                        <option value="0.0">⚪ Off (Pure Interpolation)</option>
+                                    </select>
+                                </div>
                                 <div class="form-check form-switch mb-3">
                                     <input class="form-check-input" type="checkbox" id="vid-adaptive" checked>
                                     <label class="form-check-label small fw-bold text-info" for="vid-adaptive">Enable Adaptive Quality</label>
@@ -539,6 +559,16 @@
                                         </select>
                                     </div>
                                 </div>
+                                <div class="mb-3">
+                                    <label class="small text-warning fw-bold"><i class="bi bi-magic me-1"></i> OpenMP Edge Sharpening & Detail Recovery</label>
+                                    <select id="photo-enhancement" class="form-select form-select-sm bg-dark text-warning border-warning">
+                                        <option value="2.0" selected>⚡ Ultra Super-Resolution (2.0x Boost - Crystal Clear / Recommended)</option>
+                                        <option value="2.5">🔥 Maximum Edge Recovery (2.5x Boost - Extreme Sharpness)</option>
+                                        <option value="1.5">✨ Crisp Super-Resolution (1.5x Boost)</option>
+                                        <option value="1.0">🌿 Natural Detail (+1.0x Edge Boost)</option>
+                                        <option value="0.0">⚪ Academic Baseline (0.0x Pure Bicubic)</option>
+                                    </select>
+                                </div>
                                 <button type="submit" class="btn btn-primary btn-sm w-100" id="photo-submit-btn">
                                     <i class="bi bi-stars me-1"></i> Upscale Photo with OpenMP C++
                                 </button>
@@ -571,22 +601,77 @@
                                         <div class="col-md-5">
                                             <span class="text-secondary small d-block">BEFORE (Original Input)</span>
                                             <h5 class="fw-bold text-light mb-0" id="photo-before-res">480x360</h5>
-                                            <span class="badge bg-secondary fs-6 mt-1" id="photo-before-px">172,800 Pixels</span>
+                                            <div class="d-flex justify-content-center gap-2 mt-1">
+                                                <span class="badge bg-secondary" id="photo-before-px">172,800 Pixels</span>
+                                                <span class="badge bg-dark border border-secondary text-secondary" id="photo-src-sharpness-badge">Sharpness: --</span>
+                                            </div>
                                         </div>
                                         <div class="col-md-2">
                                             <i class="bi bi-arrow-right-circle-fill text-primary fs-2"></i>
                                             <span class="d-block small text-info fw-bold" id="photo-scale-badge">2x Scale</span>
                                         </div>
                                         <div class="col-md-5">
-                                            <span class="text-secondary small d-block">AFTER (OpenMP Upscaled)</span>
+                                            <span class="text-secondary small d-block">AFTER (C++ OpenMP Enhanced)</span>
                                             <h5 class="fw-bold text-info mb-0" id="photo-after-res">960x720</h5>
-                                            <span class="badge bg-success fs-6 mt-1" id="photo-after-px">691,200 Pixels (+300% Data)</span>
+                                            <div class="d-flex justify-content-center gap-2 mt-1">
+                                                <span class="badge bg-success" id="photo-after-px">691,200 Pixels (+300% Data)</span>
+                                                <span class="badge bg-warning text-dark fw-bold" id="photo-dst-sharpness-badge">Sharpness: +0%</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Dual Before / After Cards -->
-                                <div class="row g-3 mb-3">
+                                <!-- View Mode Toolbar: Split Wipe vs Dual View vs Loupe -->
+                                <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button type="button" class="btn btn-info active" id="btn-view-split" onclick="switchPhotoView('split')">
+                                            <i class="bi bi-layout-split me-1"></i> Interactive Split Wipe Slider
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" id="btn-view-side" onclick="switchPhotoView('side')">
+                                            <i class="bi bi-columns-gap me-1"></i> Side-by-Side Dual View
+                                        </button>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-outline-info btn-sm" id="btn-auto-wipe" onclick="toggleAutoWipe()">
+                                            <i class="bi bi-play-circle me-1" id="auto-wipe-icon"></i> <span id="auto-wipe-text">Auto-Wipe Demo</span>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-warning btn-sm" id="btn-photo-loupe" onclick="togglePhotoLoupe()">
+                                            <i class="bi bi-zoom-in me-1"></i> <span id="loupe-btn-text">Enable 3x Zoom Loupe</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- 1. Interactive Split-Screen Wipe Slider View (Default) -->
+                                <div id="split-photo-container" class="position-relative overflow-hidden rounded border border-info shadow-lg my-2" style="height: 480px; background: #0b0e14; cursor: ew-resize; user-select: none;">
+                                    <!-- After Image (Upscaled & Sharpened) -->
+                                    <img id="split-after-img" src="" alt="Enhanced" class="position-absolute top-50 start-50 translate-middle" style="max-height: 100%; max-width: 100%; object-fit: contain; pointer-events: none;">
+                                    <div class="position-absolute top-0 end-0 m-2" style="z-index: 5;">
+                                        <span class="badge bg-success shadow px-2 py-1"><i class="bi bi-stars me-1"></i> AFTER: C++ OpenMP Enhanced (<span id="split-dst-res">--</span>)</span>
+                                    </div>
+
+                                    <!-- Before Image (Clipped via clip-path) -->
+                                    <img id="split-before-img" src="" alt="Original" class="position-absolute top-50 start-50 translate-middle" style="max-height: 100%; max-width: 100%; object-fit: contain; pointer-events: none; clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);">
+                                    <div class="position-absolute top-0 start-0 m-2" style="z-index: 5;">
+                                        <span class="badge bg-secondary shadow px-2 py-1"><i class="bi bi-camera me-1"></i> BEFORE: Original (<span id="split-src-res">--</span>)</span>
+                                    </div>
+
+                                    <!-- Divider Line with Circular Grab Handle -->
+                                    <div id="split-divider-line" class="position-absolute top-0 bottom-0" style="left: 50%; width: 4px; background: #00d2ff; box-shadow: 0 0 12px #00d2ff; z-index: 10; pointer-events: none;">
+                                        <div class="position-absolute top-50 start-50 translate-middle rounded-circle bg-primary text-white d-flex align-items-center justify-content-center shadow" style="width: 38px; height: 38px; border: 2px solid #fff; font-size: 13px; font-weight: bold;">
+                                            ◄►
+                                        </div>
+                                    </div>
+
+                                    <!-- 3x Magnifying Loupe Overlay -->
+                                    <div id="photo-loupe-circle" class="position-absolute rounded-circle shadow-lg" style="display: none; width: 200px; height: 200px; border: 3px solid #00d2ff; pointer-events: none; z-index: 30; box-shadow: 0 0 25px rgba(0,210,255,0.8); background-repeat: no-repeat; transform: translate(-50%, -50%);"></div>
+                                </div>
+                                <div id="split-instructions-bar" class="d-flex justify-content-between text-muted small px-1 mb-3">
+                                    <span><i class="bi bi-arrow-left-right me-1 text-info"></i> Drag slider or move cursor over photo to wipe raw soft input vs crisp enhanced output</span>
+                                    <span class="text-info fw-bold" id="split-pos-label">Divider: 50%</span>
+                                </div>
+
+                                <!-- 2. Side-by-Side Dual View (Alternative) -->
+                                <div id="side-photo-container" class="row g-3 mb-3" style="display: none;">
                                     <div class="col-md-6">
                                         <div class="card bg-black border-secondary p-2 h-100">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
@@ -594,7 +679,7 @@
                                                 <span class="badge bg-secondary" id="photo-src-pill">480x360</span>
                                             </div>
                                             <div class="d-flex justify-content-center align-items-center bg-dark rounded overflow-hidden" style="min-height: 280px;">
-                                                <img id="photo-src-img" src="" alt="Before" class="img-fluid rounded" style="max-height: 360px; object-fit: contain;">
+                                                <img id="photo-src-img" src="" alt="Before" class="img-fluid rounded" style="max-height: 380px; object-fit: contain;">
                                             </div>
                                         </div>
                                     </div>
@@ -605,7 +690,7 @@
                                                 <span class="badge bg-primary" id="photo-dst-pill">960x720</span>
                                             </div>
                                             <div class="d-flex justify-content-center align-items-center bg-dark rounded overflow-hidden" style="min-height: 280px;">
-                                                <img id="photo-dst-img" src="" alt="After" class="img-fluid rounded" style="max-height: 360px; object-fit: contain;">
+                                                <img id="photo-dst-img" src="" alt="After" class="img-fluid rounded" style="max-height: 380px; object-fit: contain;">
                                             </div>
                                         </div>
                                     </div>
@@ -617,7 +702,7 @@
                                         <div class="col-md-3">Compute Latency: <strong class="text-light" id="photo-stat-lat">-- ms</strong></div>
                                         <div class="col-md-3">Algorithm: <strong class="text-warning" id="photo-stat-method">BICUBIC</strong></div>
                                         <div class="col-md-3">OpenMP Threads: <strong class="text-info" id="photo-stat-threads">8 Threads</strong></div>
-                                        <div class="col-md-3">Edge Energy Boost: <strong class="text-success" id="photo-stat-sharpness">+0%</strong></div>
+                                        <div class="col-md-3">Detail Enhancement: <strong class="text-success" id="photo-stat-enhancement">+1.0x Edge Boost</strong></div>
                                     </div>
                                 </div>
                             </div>
@@ -631,7 +716,7 @@
     </div>
 
     <!-- Cache-busted JavaScript bundles -->
-    <script src="/static/js/app.js?v=9.0"></script>
-    <script src="/static/js/charts.js?v=9.0"></script>
+    <script src="/static/js/app.js?v=11.0"></script>
+    <script src="/static/js/charts.js?v=10.0"></script>
 </body>
 </html>

@@ -1,7 +1,8 @@
-﻿#include <iostream>
+#include <iostream>
 #include <cmath>
 #include <algorithm>
 #include <vector>
+#include <cstring>
 #include <omp.h>
 #include <cstdint>
 
@@ -211,6 +212,105 @@ __declspec(dllexport) double upscale_frame_cpp(
 
     double t_end = omp_get_wtime();
     return (t_end - t_start) * 1000.0;
+}
+
+// High-Frequency Contrast & Edge Enhancement Filter using OpenMP
+__declspec(dllexport) double enhance_edges_cpp(
+    const uint8_t* src, uint8_t* dst, int width, int height, int channels,
+    float strength, int policy, int num_threads, int chunk_size
+) {
+    double t_start = omp_get_wtime();
+    if (num_threads <= 0) num_threads = omp_get_max_threads();
+    if (chunk_size <= 0) chunk_size = 16;
+    if (strength <= 0.0f) {
+        if (src != dst) {
+            std::memcpy(dst, src, static_cast<size_t>(width) * height * channels);
+        }
+        return (omp_get_wtime() - t_start) * 1000.0;
+    }
+
+    // 8-neighbourhood contrast-adaptive unsharp sharpening + micro-contrast boost
+    float w = strength * 0.65f;
+    float w_diag = -w * 0.25f;
+    float w_ortho = -w * 0.5f;
+    float w_center = 1.0f + 3.0f * w;
+    float cboost = (strength > 0.4f) ? (1.0f + 0.065f * std::min(strength, 2.5f)) : 1.0f;
+
+    // Boundary copy (row 0 and row height - 1)
+    for (int c = 0; c < channels; ++c) {
+        for (int x = 0; x < width; ++x) {
+            dst[x * channels + c] = src[x * channels + c];
+            int b_idx = ((height - 1) * width + x) * channels + c;
+            dst[b_idx] = src[b_idx];
+        }
+    }
+
+    auto process_sharpen_row = [&](int y) {
+        const uint8_t* row_prev = src + (y - 1) * width * channels;
+        const uint8_t* row_curr = src + y * width * channels;
+        const uint8_t* row_next = src + (y + 1) * width * channels;
+        uint8_t* dst_row = dst + y * width * channels;
+
+        // Left and right border pixels
+        for (int c = 0; c < channels; ++c) {
+            dst_row[c] = row_curr[c];
+            int right_idx = (width - 1) * channels + c;
+            dst_row[right_idx] = row_curr[right_idx];
+        }
+
+        // Interior pixels
+        for (int x = 1; x < width - 1; ++x) {
+            int idx_p = (x - 1) * channels;
+            int idx_c = x * channels;
+            int idx_n = (x + 1) * channels;
+
+            for (int c = 0; c < channels; ++c) {
+                float val = 
+                    w_diag * (row_prev[idx_p + c] + row_prev[idx_n + c] + row_next[idx_p + c] + row_next[idx_n + c]) +
+                    w_ortho * (row_prev[idx_c + c] + row_curr[idx_p + c] + row_curr[idx_n + c] + row_next[idx_c + c]) +
+                    w_center * row_curr[idx_c + c];
+                if (cboost > 1.0f) {
+                    val = (val - 128.0f) * cboost + 128.0f;
+                }
+                dst_row[idx_c + c] = clamp_to_byte(val);
+            }
+        }
+    };
+
+    if (policy == 0) { // Serial
+        for (int y = 1; y < height - 1; ++y) process_sharpen_row(y);
+    } else if (policy == 2) { // OpenMP Dynamic
+        #pragma omp parallel for num_threads(num_threads) schedule(dynamic, chunk_size)
+        for (int y = 1; y < height - 1; ++y) process_sharpen_row(y);
+    } else if (policy == 3) { // OpenMP Guided
+        #pragma omp parallel for num_threads(num_threads) schedule(guided, chunk_size)
+        for (int y = 1; y < height - 1; ++y) process_sharpen_row(y);
+    } else { // OpenMP Static
+        #pragma omp parallel for num_threads(num_threads) schedule(static, chunk_size)
+        for (int y = 1; y < height - 1; ++y) process_sharpen_row(y);
+    }
+
+    double t_end = omp_get_wtime();
+    return (t_end - t_start) * 1000.0;
+}
+
+// Unified Super-Resolution: Sub-pixel Interpolation + OpenMP Edge Sharpening
+__declspec(dllexport) double upscale_and_enhance_cpp(
+    const uint8_t* src, int src_w, int src_h, int channels,
+    uint8_t* dst, int dst_w, int dst_h,
+    int method, int policy, int num_threads, int chunk_size,
+    float enhancement_strength
+) {
+    if (enhancement_strength <= 0.0f) {
+        return upscale_frame_cpp(src, src_w, src_h, channels, dst, dst_w, dst_h, method, policy, num_threads, chunk_size);
+    }
+
+    size_t total_bytes = static_cast<size_t>(dst_w) * dst_h * channels;
+    std::vector<uint8_t> temp_buf(total_bytes);
+
+    double t1 = upscale_frame_cpp(src, src_w, src_h, channels, temp_buf.data(), dst_w, dst_h, method, policy, num_threads, chunk_size);
+    double t2 = enhance_edges_cpp(temp_buf.data(), dst, dst_w, dst_h, channels, enhancement_strength, policy, num_threads, chunk_size);
+    return t1 + t2;
 }
 
 } // extern "C"

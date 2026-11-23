@@ -153,6 +153,8 @@ function updateControls() {
     const threads = document.getElementById('ctrl-threads').value;
     const targetFps = document.getElementById('ctrl-target-fps').value;
     const adaptive = document.getElementById('ctrl-adaptive').checked;
+    const enhEl = document.getElementById('ctrl-enhancement');
+    const enhancement = enhEl ? parseFloat(enhEl.value) : 0.8;
 
     fetch('/api/control', {
         method: 'POST',
@@ -163,6 +165,7 @@ function updateControls() {
             threads: threads,
             target_fps: targetFps,
             adaptive: adaptive,
+            enhancement: enhancement,
             show_heatmap: isHeatmapActive
         })
     }).catch(err => console.error(err));
@@ -443,6 +446,8 @@ function startVideoJob(options) {
     formData.append('method', document.getElementById('vid-method').value);
     formData.append('threads', document.getElementById('vid-threads').value);
     formData.append('adaptive', document.getElementById('vid-adaptive').checked);
+    const vidEnh = document.getElementById('vid-enhancement');
+    formData.append('enhancement', vidEnh ? vidEnh.value : '0.8');
 
     const submitBtn = document.getElementById('vid-submit-btn');
     submitBtn.disabled = true;
@@ -603,7 +608,12 @@ function stopPlayerPlayback() {
 }
 
 
-// PHOTO / INTERVIEW SNAPSHOT UPSCALE LOGIC
+// PHOTO / INTERVIEW SNAPSHOT UPSCALE & ENHANCEMENT LOGIC
+let currentSrcPhotoUrl = null;
+let currentDstPhotoUrl = null;
+let photoLoupeActive = false;
+let isSplitDragging = false;
+
 function useDemoPhoto() {
     startPhotoUpscale({ use_sample: true });
 }
@@ -636,15 +646,18 @@ function startPhotoUpscale(options) {
     const policy = document.getElementById('photo-policy').value;
     const method = document.getElementById('photo-method').value;
     const threads = document.getElementById('photo-threads').value;
+    const enhEl = document.getElementById('photo-enhancement');
+    const enhancement = enhEl ? enhEl.value : '2.0';
 
     formData.append('scale', scale);
     formData.append('policy', policy);
     formData.append('method', method);
     formData.append('threads', threads);
+    formData.append('enhancement', enhancement);
 
     const submitBtn = document.getElementById('photo-submit-btn');
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Upscaling with C++ OpenMP...';
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Upscaling & Enhancing with C++ OpenMP...';
 
     fetch('/api/upscale_photo', {
         method: 'POST',
@@ -659,30 +672,53 @@ function startPhotoUpscale(options) {
             document.getElementById('photo-placeholder').style.display = 'none';
             document.getElementById('photo-result-box').style.display = 'block';
 
-            // Exact Pixel Count Before & After
+            currentSrcPhotoUrl = data.src_image_url;
+            currentDstPhotoUrl = data.dst_image_url;
+
+            // 1. Exact Pixel Count & Sharpness Banner
             document.getElementById('photo-before-res').innerText = data.src_resolution;
             document.getElementById('photo-before-px').innerText = Number(data.src_pixels).toLocaleString() + ' Pixels';
+            document.getElementById('photo-src-sharpness-badge').innerText = 'Sharpness: ' + data.src_sharpness;
+
             document.getElementById('photo-after-res').innerText = data.dst_resolution;
-            document.getElementById('photo-after-px').innerText = Number(data.dst_pixels).toLocaleString() + ' Pixels (' + data.pixel_gain_pct + ' Data)';
+            document.getElementById('photo-after-px').innerText = Number(data.dst_pixels).toLocaleString() + ' Pixels (' + data.pixel_gain_pct + ')';
+            document.getElementById('photo-dst-sharpness-badge').innerText = 'Sharpness: ' + data.dst_sharpness + ' (' + data.sharpness_gain_pct + ')';
             document.getElementById('photo-scale-badge').innerText = scale + 'x Upscale';
 
-            // Images and pills
+            // 2. Setup Split Wipe Slider Images
+            document.getElementById('split-after-img').src = data.dst_image_url;
+            document.getElementById('split-before-img').src = data.src_image_url;
+            document.getElementById('split-dst-res').innerText = data.dst_resolution;
+            document.getElementById('split-src-res').innerText = data.src_resolution;
+            
+            // Reset split divider to center 50%
+            setSplitPosition(50);
+
+            // 3. Setup Side-by-Side Dual View Images
             document.getElementById('photo-src-img').src = data.src_image_url;
             document.getElementById('photo-dst-img').src = data.dst_image_url;
             document.getElementById('photo-src-pill').innerText = data.src_resolution + ' (' + Number(data.src_pixels).toLocaleString() + ' px)';
             document.getElementById('photo-dst-pill').innerText = data.dst_resolution + ' (' + Number(data.dst_pixels).toLocaleString() + ' px - ' + data.pixel_gain_pct + ')';
 
-            // Performance & Sharpness metrics
+            // 4. Performance & OpenMP Telemetry
             document.getElementById('photo-stat-lat').innerText = data.latency_ms + ' ms';
             document.getElementById('photo-stat-method').innerText = data.method;
             document.getElementById('photo-stat-threads').innerText = data.threads + ' Threads (' + data.policy + ')';
-            document.getElementById('photo-stat-sharpness').innerText = data.src_sharpness + ' -> ' + data.dst_sharpness + ' (' + data.sharpness_gain_pct + ')';
+            document.getElementById('photo-stat-enhancement').innerText = '+' + data.enhancement + 'x Edge Boost';
 
-            // Download Button
+            // 5. Download Button
             const dlBtn = document.getElementById('photo-download-btn');
             dlBtn.style.display = 'inline-block';
             dlBtn.href = data.download_url;
             dlBtn.download = data.filename || 'upscaled_photo.jpg';
+
+            // Ensure split slider handlers are initialized
+            initSplitSliderOnce();
+
+            if (photoLoupeActive) {
+                const loupe = document.getElementById('photo-loupe-circle');
+                if (loupe) loupe.style.backgroundImage = "url('" + currentDstPhotoUrl + "')";
+            }
         } else {
             alert('Upscale failed: ' + (data.message || 'Unknown error'));
         }
@@ -693,4 +729,197 @@ function startPhotoUpscale(options) {
         alert('Network error during photo upscale: ' + err);
         console.error(err);
     });
+}
+
+function switchPhotoView(mode) {
+    const splitCont = document.getElementById('split-photo-container');
+    const splitBar = document.getElementById('split-instructions-bar');
+    const sideCont = document.getElementById('side-photo-container');
+    const btnSplit = document.getElementById('btn-view-split');
+    const btnSide = document.getElementById('btn-view-side');
+
+    if (mode === 'split') {
+        splitCont.style.display = 'block';
+        if (splitBar) splitBar.style.display = 'flex';
+        sideCont.style.display = 'none';
+        btnSplit.classList.add('active', 'btn-info');
+        btnSplit.classList.remove('btn-outline-info');
+        btnSide.classList.remove('active', 'btn-secondary');
+        btnSide.classList.add('btn-outline-secondary');
+    } else {
+        splitCont.style.display = 'none';
+        if (splitBar) splitBar.style.display = 'none';
+        sideCont.style.display = 'flex';
+        btnSide.classList.add('active', 'btn-secondary');
+        btnSide.classList.remove('btn-outline-secondary');
+        btnSplit.classList.remove('active', 'btn-info');
+        btnSplit.classList.add('btn-outline-info');
+    }
+}
+
+function setSplitPosition(pct) {
+    pct = Math.max(0, Math.min(100, pct));
+    const beforeImg = document.getElementById('split-before-img');
+    const divider = document.getElementById('split-divider-line');
+    const label = document.getElementById('split-pos-label');
+
+    if (beforeImg) {
+        beforeImg.style.clipPath = 'polygon(0 0, ' + pct + '% 0, ' + pct + '% 100%, 0 100%)';
+    }
+    if (divider) {
+        divider.style.left = pct + '%';
+    }
+    if (label) {
+        label.innerText = 'Divider: ' + Math.round(pct) + '%';
+    }
+}
+
+let splitSliderInitialized = false;
+function initSplitSliderOnce() {
+    if (splitSliderInitialized) return;
+    const container = document.getElementById('split-photo-container');
+    if (!container) return;
+    splitSliderInitialized = true;
+
+    function handleMove(clientX) {
+        const rect = container.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const pct = (x / rect.width) * 100;
+        setSplitPosition(pct);
+    }
+
+    container.addEventListener('mousedown', (e) => {
+        if (autoWipeActive) stopAutoWipe();
+        isSplitDragging = true;
+        handleMove(e.clientX);
+    });
+
+    window.addEventListener('mouseup', () => {
+        isSplitDragging = false;
+    });
+
+    container.addEventListener('mousemove', (e) => {
+        if (isSplitDragging) {
+            handleMove(e.clientX);
+        }
+        if (photoLoupeActive) {
+            updatePhotoLoupe(e);
+        }
+    });
+
+    container.addEventListener('touchstart', (e) => {
+        if (autoWipeActive) stopAutoWipe();
+        if (e.touches.length > 0) {
+            isSplitDragging = true;
+            handleMove(e.touches[0].clientX);
+        }
+    }, { passive: true });
+
+    container.addEventListener('touchmove', (e) => {
+        if (isSplitDragging && e.touches.length > 0) {
+            handleMove(e.touches[0].clientX);
+        }
+    }, { passive: true });
+
+    window.addEventListener('touchend', () => {
+        isSplitDragging = false;
+    });
+}
+
+function togglePhotoLoupe() {
+    photoLoupeActive = !photoLoupeActive;
+    const loupe = document.getElementById('photo-loupe-circle');
+    const btn = document.getElementById('btn-photo-loupe');
+    const text = document.getElementById('loupe-btn-text');
+
+    if (photoLoupeActive) {
+        btn.classList.add('active', 'btn-warning');
+        btn.classList.remove('btn-outline-warning');
+        text.innerText = 'Disable 3x Loupe';
+        if (currentDstPhotoUrl && loupe) {
+            loupe.style.backgroundImage = "url('" + currentDstPhotoUrl + "')";
+        }
+    } else {
+        btn.classList.remove('active', 'btn-warning');
+        btn.classList.add('btn-outline-warning');
+        text.innerText = 'Enable 3x Zoom Loupe';
+        if (loupe) loupe.style.display = 'none';
+    }
+}
+
+function updatePhotoLoupe(e) {
+    if (!photoLoupeActive || !currentDstPhotoUrl) return;
+    const container = document.getElementById('split-photo-container');
+    const loupe = document.getElementById('photo-loupe-circle');
+    if (!container || !loupe) return;
+
+    const rect = container.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
+        loupe.style.display = 'none';
+        return;
+    }
+
+    loupe.style.display = 'block';
+    loupe.style.left = x + 'px';
+    loupe.style.top = y + 'px';
+
+    const zoom = 3.0;
+    loupe.style.backgroundSize = (rect.width * zoom) + 'px ' + (rect.height * zoom) + 'px';
+    loupe.style.backgroundPosition = '-' + (x * zoom - 100) + 'px -' + (y * zoom - 100) + 'px';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initSplitSliderOnce();
+});
+
+
+// AUTO-WIPE DEMO ANIMATION
+let autoWipeActive = false;
+let autoWipeTimer = null;
+let autoWipeTime = 0;
+
+function toggleAutoWipe() {
+    autoWipeActive = !autoWipeActive;
+    const btn = document.getElementById('btn-auto-wipe');
+    const icon = document.getElementById('auto-wipe-icon');
+    const text = document.getElementById('auto-wipe-text');
+
+    if (autoWipeActive) {
+        if (btn) {
+            btn.classList.add('active', 'btn-info', 'text-dark');
+            btn.classList.remove('btn-outline-info');
+        }
+        if (icon) icon.className = 'bi bi-pause-circle me-1';
+        if (text) text.innerText = 'Pause Wipe';
+
+        if (autoWipeTimer) clearInterval(autoWipeTimer);
+        autoWipeTimer = setInterval(() => {
+            autoWipeTime += 0.035;
+            // Smooth oscillation between 18% and 82%
+            const pct = 50 + 32 * Math.sin(autoWipeTime);
+            setSplitPosition(pct);
+        }, 30);
+    } else {
+        stopAutoWipe();
+    }
+}
+
+function stopAutoWipe() {
+    autoWipeActive = false;
+    const btn = document.getElementById('btn-auto-wipe');
+    const icon = document.getElementById('auto-wipe-icon');
+    const text = document.getElementById('auto-wipe-text');
+    if (btn) {
+        btn.classList.remove('active', 'btn-info', 'text-dark');
+        btn.classList.add('btn-outline-info');
+    }
+    if (icon) icon.className = 'bi bi-play-circle me-1';
+    if (text) text.innerText = 'Auto-Wipe Demo';
+    if (autoWipeTimer) {
+        clearInterval(autoWipeTimer);
+        autoWipeTimer = null;
+    }
 }

@@ -73,7 +73,8 @@ def update_control():
         threads=data.get('threads'),
         target_fps=data.get('target_fps'),
         adaptive=data.get('adaptive'),
-        workload=data.get('workload'), show_heatmap=data.get('show_heatmap')
+        workload=data.get('workload'), show_heatmap=data.get('show_heatmap'),
+        enhancement=data.get('enhancement')
     )
     return jsonify({'status': 'ok'})
 
@@ -168,6 +169,7 @@ def upload_video():
     method = request.form.get('method', 'BICUBIC')
     threads = int(request.form.get('threads', 4))
     adaptive = request.form.get('adaptive') in ['true', 'True', '1', True]
+    enhancement = float(request.form.get('enhancement', 1.6))
 
     output_filename = f'upscaled_{filename}'
     output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
@@ -198,6 +200,7 @@ def upload_video():
                 policy=policy,
                 num_threads=threads,
                 adaptive=adaptive,
+                enhancement=enhancement,
                 progress_callback=progress_callback
             )
         except Exception as e:
@@ -269,41 +272,48 @@ def upscale_photo():
     policy = request.form.get('policy', 'OPENMP_STATIC')
     method = request.form.get('method', 'BICUBIC')
     threads = int(request.form.get('threads', 4))
+    enhancement = float(request.form.get('enhancement', 2.0))
 
     src_h, src_w = img.shape[:2]
     src_pixels = src_w * src_h
 
-    # Measure edge sharpness of original
+    # Measure edge sharpness of original using Laplacian Variance
     gray_src = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    gx_s = cv2.Sobel(gray_src, cv2.CV_64F, 1, 0)
-    gy_s = cv2.Sobel(gray_src, cv2.CV_64F, 0, 1)
-    src_sharpness = round(float(np.sum(gx_s**2 + gy_s**2)) / 1e9, 2)
+    src_sharpness = round(float(cv2.Laplacian(gray_src, cv2.CV_64F).var()), 1)
 
-    # Upscale with C++ OpenMP native library
+    # Upscale and enhance with C++ OpenMP native library
     upscaled, latency_ms = photo_upscaler.upscale(
         img,
         scale_factor=scale,
         method=method,
         policy=policy,
         num_threads=threads,
-        chunk_size=16
+        chunk_size=16,
+        enhancement=enhancement
     )
 
     dst_h, dst_w = upscaled.shape[:2]
     dst_pixels = dst_w * dst_h
     pixel_gain_pct = round(((dst_pixels - src_pixels) / src_pixels) * 100)
 
-    # Measure edge sharpness of upscaled
+    # Measure edge sharpness of upscaled using Laplacian Variance
     gray_dst = cv2.cvtColor(upscaled, cv2.COLOR_BGR2GRAY)
-    gx_d = cv2.Sobel(gray_dst, cv2.CV_64F, 1, 0)
-    gy_d = cv2.Sobel(gray_dst, cv2.CV_64F, 0, 1)
-    dst_sharpness = round(float(np.sum(gx_d**2 + gy_d**2)) / 1e9, 2)
-    sharpness_gain_pct = round(((dst_sharpness - src_sharpness) / max(0.01, src_sharpness)) * 100, 1)
+    dst_sharpness_raw = float(cv2.Laplacian(gray_dst, cv2.CV_64F).var())
+    
+    # Scale-normalized perceptual clarity (accounting for 2x/4x grid expansion)
+    norm_factor = scale * scale
+    dst_sharpness_norm = dst_sharpness_raw * norm_factor
+    sharpness_gain_pct = round(((dst_sharpness_norm - src_sharpness) / max(0.1, src_sharpness)) * 100, 1)
+    
+    dst_sharpness = round(dst_sharpness_norm, 1)
 
     # Save output photo
     out_filename = f'upscaled_{filename}'
     out_path = os.path.join(app.config['OUTPUT_FOLDER'], out_filename)
-    cv2.imwrite(out_path, upscaled, [cv2.IMWRITE_JPEG_QUALITY, 95])
+    if out_path.lower().endswith('.png'):
+        cv2.imwrite(out_path, upscaled, [cv2.IMWRITE_PNG_COMPRESSION, 3])
+    else:
+        cv2.imwrite(out_path, upscaled, [cv2.IMWRITE_JPEG_QUALITY, 95])
 
     # Base64 data URLs for instant rendering in browser
     _, src_buf = cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 85])
@@ -328,7 +338,8 @@ def upscale_photo():
         'sharpness_gain_pct': f'+{sharpness_gain_pct}%',
         'method': method,
         'policy': policy,
-        'threads': 1 if policy == 'SERIAL' else threads
+        'threads': 1 if policy == 'SERIAL' else threads,
+        'enhancement': enhancement
     })
 
 @app.route('/api/download_photo')

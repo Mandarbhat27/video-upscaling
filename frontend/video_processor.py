@@ -22,7 +22,7 @@ class VideoJobProcessor:
 
     def process_file(self, input_path, output_path, scale_factor=2.0, method="BILINEAR",
                      policy="OPENMP_STATIC", num_threads=4, adaptive=False, target_fps=30.0,
-                     progress_callback=None):
+                     enhancement=1.6, progress_callback=None):
         self.is_processing = True
         self.preview_frames = []
         self.latest_frame_jpeg = None
@@ -75,7 +75,8 @@ class VideoJobProcessor:
                     method=active_method,
                     policy=policy,
                     num_threads=num_threads,
-                    chunk_size=16
+                    chunk_size=16,
+                    enhancement=enhancement
                 )
                 total_interp_latency += interp_lat
 
