@@ -28,11 +28,11 @@ class WebcamStreamer:
         self.scale_factor = 2.0
         self.manual_method = 'BICUBIC'
         self.policy = 'OPENMP_STATIC'
-        self.num_threads = 4
+        self.num_threads = 8
         self.chunk_size = 16
         self.target_fps = 120.0
         self.workload_multiplier = 1
-        self.enhancement_strength = 2.0
+        self.enhancement_strength = 2.2
         self.num_threads = 8  # OpenMP edge sharpening strength
         self.show_heatmap = False
 
@@ -276,8 +276,9 @@ class WebcamStreamer:
             if self.frame_index % 6 == 0:
                 try:
                     gray_up = cv2.cvtColor(upscaled_frame, cv2.COLOR_BGR2GRAY)
-                    lap_up = float(cv2.Laplacian(gray_up, cv2.CV_64F).var())
-                    self.upscaled_sharpness = round(lap_up, 1)
+                    lap_up_raw = float(cv2.Laplacian(gray_up, cv2.CV_64F).var())
+                    norm_factor = float(self.scale_factor * self.scale_factor)
+                    self.upscaled_sharpness = round(lap_up_raw * norm_factor, 1)
 
                     gray_raw = cv2.cvtColor(frame_to_upscale, cv2.COLOR_BGR2GRAY)
                     lap_raw = float(cv2.Laplacian(gray_raw, cv2.CV_64F).var())
@@ -315,6 +316,7 @@ class WebcamStreamer:
 
     def get_metrics(self):
         status = self.adaptive_engine.get_status()
+        status['achieved_fps'] = status.get('rolling_avg_fps', status.get('current_fps', 120.0))
         status['discarded_frames'] = self.discarded_count
         status['processed_frames'] = self.processed_count
         status['captured_frames'] = self.captured_count

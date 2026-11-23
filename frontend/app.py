@@ -167,9 +167,9 @@ def upload_video():
     scale = float(request.form.get('scale', 2.0))
     policy = request.form.get('policy', 'OPENMP_STATIC')
     method = request.form.get('method', 'BICUBIC')
-    threads = int(request.form.get('threads', 4))
+    threads = int(request.form.get('threads', 8))
     adaptive = request.form.get('adaptive') in ['true', 'True', '1', True]
-    enhancement = float(request.form.get('enhancement', 1.6))
+    enhancement = float(request.form.get('enhancement', 2.2))
 
     output_filename = f'upscaled_{filename}'
     output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
@@ -278,8 +278,8 @@ def upscale_photo():
     scale = float(request.form.get('scale', 2.0))
     policy = request.form.get('policy', 'OPENMP_STATIC')
     method = request.form.get('method', 'BICUBIC')
-    threads = int(request.form.get('threads', 4))
-    enhancement = float(request.form.get('enhancement', 2.0))
+    threads = int(request.form.get('threads', 8))
+    enhancement = float(request.form.get('enhancement', 2.2))
 
     src_h, src_w = img.shape[:2]
     src_pixels = src_w * src_h

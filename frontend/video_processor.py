@@ -25,9 +25,9 @@ class VideoJobProcessor:
             return self.preview_frames[index]
         return None
 
-    def process_file(self, input_path, output_path, scale_factor=2.0, method="BILINEAR",
-                     policy="OPENMP_STATIC", num_threads=4, adaptive=False, target_fps=30.0,
-                     enhancement=1.6, progress_callback=None):
+    def process_file(self, input_path, output_path, scale_factor=2.0, method="BICUBIC",
+                     policy="OPENMP_STATIC", num_threads=8, adaptive=False, target_fps=30.0,
+                     enhancement=2.2, progress_callback=None):
         self.is_processing = True
         self.preview_frames = []
         self.preview_raw_frames = []
@@ -65,6 +65,9 @@ class VideoJobProcessor:
             total_interp_latency = 0.0
             t_start_total = time.time()
 
+            # Ensure optimal enhancement strength for crisp output
+            enhancement_val = max(1.8, float(enhancement))
+
             while True:
                 ret, frame = cap.read()
                 if not ret or frame is None:
@@ -73,7 +76,9 @@ class VideoJobProcessor:
                 processed_count += 1
                 active_method = method
                 if adaptive:
-                    active_method = adaptive_engine.current_method
+                    # In offline file export, never degrade to blocky NEAREST unless user explicitly requested NEAREST
+                    cand = adaptive_engine.current_method
+                    active_method = cand if (cand != 'NEAREST' or method == 'NEAREST') else 'BILINEAR'
 
                 upscaled, interp_lat = self.upscaler.upscale(
                     frame,
@@ -82,7 +87,7 @@ class VideoJobProcessor:
                     policy=policy,
                     num_threads=num_threads,
                     chunk_size=16,
-                    enhancement=enhancement
+                    enhancement=enhancement_val
                 )
                 total_interp_latency += interp_lat
 

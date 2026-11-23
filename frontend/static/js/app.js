@@ -449,7 +449,7 @@ function startVideoJob(options) {
     formData.append('threads', document.getElementById('vid-threads').value);
     formData.append('adaptive', document.getElementById('vid-adaptive').checked);
     const vidEnh = document.getElementById('vid-enhancement');
-    formData.append('enhancement', vidEnh ? vidEnh.value : '0.8');
+    formData.append('enhancement', vidEnh ? vidEnh.value : '2.2');
 
     const submitBtn = document.getElementById('vid-submit-btn');
     submitBtn.disabled = true;
@@ -663,7 +663,7 @@ function startPhotoUpscale(options) {
     const method = document.getElementById('photo-method').value;
     const threads = document.getElementById('photo-threads').value;
     const enhEl = document.getElementById('photo-enhancement');
-    const enhancement = enhEl ? enhEl.value : '2.0';
+    const enhancement = enhEl ? enhEl.value : '2.2';
 
     formData.append('scale', scale);
     formData.append('policy', policy);

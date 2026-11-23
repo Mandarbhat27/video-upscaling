@@ -214,10 +214,10 @@ __declspec(dllexport) double upscale_frame_cpp(
     return (t_end - t_start) * 1000.0;
 }
 
-// High-Frequency Contrast & Edge Enhancement Filter using OpenMP
-__declspec(dllexport) double enhance_edges_cpp(
+// Multi-Scale Contrast-Adaptive Sharpening (CAS) + Sub-pixel Edge Recovery using OpenMP
+__declspec(dllexport) double enhance_edges_scaled_cpp(
     const uint8_t* src, uint8_t* dst, int width, int height, int channels,
-    float strength, int policy, int num_threads, int chunk_size
+    float strength, float scale_factor, int policy, int num_threads, int chunk_size
 ) {
     double t_start = omp_get_wtime();
     if (num_threads <= 0) num_threads = omp_get_max_threads();
@@ -229,72 +229,102 @@ __declspec(dllexport) double enhance_edges_cpp(
         return (omp_get_wtime() - t_start) * 1000.0;
     }
 
-    // 8-neighbourhood normalized high-pass sharpening + micro-contrast boost
-    float w = strength * 0.28f;
-    float w_diag = -0.5f * w;
-    float w_ortho = -w;
-    float w_center = 1.0f + 6.0f * w;
-    float cboost = (strength > 0.3f) ? (1.0f + 0.055f * std::min(strength, 2.5f)) : 1.0f;
+    // Scale-adaptive sampling radius: 1 for 1.5x-2x, 2 for 2.5x-3x, 3 for 4x
+    int R = std::clamp(static_cast<int>(std::round(scale_factor * 0.75f)), 1, 4);
+    float cboost = (strength > 0.3f) ? (1.0f + 0.045f * std::min(strength, 3.0f)) : 1.0f;
 
-    // Boundary copy (row 0 and row height - 1)
-    for (int c = 0; c < channels; ++c) {
-        for (int x = 0; x < width; ++x) {
-            dst[x * channels + c] = src[x * channels + c];
-            int b_idx = ((height - 1) * width + x) * channels + c;
-            dst[b_idx] = src[b_idx];
-        }
+    // Boundary copy (rows 0..R-1 and height-R..height-1)
+    for (int y = 0; y < R; ++y) {
+        std::memcpy(dst + y * width * channels, src + y * width * channels, static_cast<size_t>(width) * channels);
+        int by = height - 1 - y;
+        std::memcpy(dst + by * width * channels, src + by * width * channels, static_cast<size_t>(width) * channels);
     }
 
-    auto process_sharpen_row = [&](int y) {
-        const uint8_t* row_prev = src + (y - 1) * width * channels;
+    auto process_cas_row = [&](int y) {
         const uint8_t* row_curr = src + y * width * channels;
-        const uint8_t* row_next = src + (y + 1) * width * channels;
+        const uint8_t* row_up = src + (y - R) * width * channels;
+        const uint8_t* row_down = src + (y + R) * width * channels;
+        const uint8_t* row_up1 = src + (y - 1) * width * channels;
+        const uint8_t* row_down1 = src + (y + 1) * width * channels;
         uint8_t* dst_row = dst + y * width * channels;
 
-        // Left and right border pixels
-        for (int c = 0; c < channels; ++c) {
-            dst_row[c] = row_curr[c];
-            int right_idx = (width - 1) * channels + c;
-            dst_row[right_idx] = row_curr[right_idx];
+        // Border columns 0..R-1 and width-R..width-1
+        for (int x = 0; x < R; ++x) {
+            for (int c = 0; c < channels; ++c) {
+                dst_row[x * channels + c] = row_curr[x * channels + c];
+                int rx = width - 1 - x;
+                dst_row[rx * channels + c] = row_curr[rx * channels + c];
+            }
         }
 
         // Interior pixels
-        for (int x = 1; x < width - 1; ++x) {
-            int idx_p = (x - 1) * channels;
+        for (int x = R; x < width - R; ++x) {
             int idx_c = x * channels;
-            int idx_n = (x + 1) * channels;
+            int idx_l = (x - R) * channels;
+            int idx_r = (x + R) * channels;
+            int idx_l1 = (x - 1) * channels;
+            int idx_r1 = (x + 1) * channels;
 
             for (int c = 0; c < channels; ++c) {
-                float val = 
-                    w_diag * (row_prev[idx_p + c] + row_prev[idx_n + c] + row_next[idx_p + c] + row_next[idx_n + c]) +
-                    w_ortho * (row_prev[idx_c + c] + row_curr[idx_p + c] + row_curr[idx_n + c] + row_next[idx_c + c]) +
-                    w_center * row_curr[idx_c + c];
+                float center = static_cast<float>(row_curr[idx_c + c]);
+                float up     = static_cast<float>(row_up[idx_c + c]);
+                float down   = static_cast<float>(row_down[idx_c + c]);
+                float left   = static_cast<float>(row_curr[idx_l + c]);
+                float right  = static_cast<float>(row_curr[idx_r + c]);
+
+                float min_val = std::min({center, up, down, left, right});
+                float max_val = std::max({center, up, down, left, right});
+
+                float amp = std::min(min_val, 255.0f - max_val) / std::max(max_val, 1.0f);
+                if (amp < 0.0f) amp = 0.0f;
+                float w_cas = -std::sqrt(amp) * (strength * 0.32f);
+
+                float num = center + w_cas * (up + down + left + right);
+                float den = 1.0f + 4.0f * w_cas;
+                float cas_val = (std::abs(den) > 1e-4f) ? (num / den) : center;
+                cas_val = std::clamp(cas_val, min_val, max_val);
+
+                float up1    = static_cast<float>(row_up1[idx_c + c]);
+                float down1  = static_cast<float>(row_down1[idx_c + c]);
+                float left1  = static_cast<float>(row_curr[idx_l1 + c]);
+                float right1 = static_cast<float>(row_curr[idx_r1 + c]);
+                float fine_lap = 4.0f * center - (up1 + down1 + left1 + right1);
+
+                float res = cas_val + fine_lap * (strength * 0.16f);
                 if (cboost > 1.0f) {
-                    val = (val - 128.0f) * cboost + 128.0f;
+                    res = (res - 128.0f) * cboost + 128.0f;
                 }
-                dst_row[idx_c + c] = clamp_to_byte(val);
+                dst_row[idx_c + c] = clamp_to_byte(res);
             }
         }
     };
 
     if (policy == 0) { // Serial
-        for (int y = 1; y < height - 1; ++y) process_sharpen_row(y);
+        for (int y = R; y < height - R; ++y) process_cas_row(y);
     } else if (policy == 2) { // OpenMP Dynamic
         #pragma omp parallel for num_threads(num_threads) schedule(dynamic, chunk_size)
-        for (int y = 1; y < height - 1; ++y) process_sharpen_row(y);
+        for (int y = R; y < height - R; ++y) process_cas_row(y);
     } else if (policy == 3) { // OpenMP Guided
         #pragma omp parallel for num_threads(num_threads) schedule(guided, chunk_size)
-        for (int y = 1; y < height - 1; ++y) process_sharpen_row(y);
+        for (int y = R; y < height - R; ++y) process_cas_row(y);
     } else { // OpenMP Static
         #pragma omp parallel for num_threads(num_threads) schedule(static, chunk_size)
-        for (int y = 1; y < height - 1; ++y) process_sharpen_row(y);
+        for (int y = R; y < height - R; ++y) process_cas_row(y);
     }
 
     double t_end = omp_get_wtime();
     return (t_end - t_start) * 1000.0;
 }
 
-// Unified Super-Resolution: Sub-pixel Interpolation + OpenMP Edge Sharpening (Zero-Allocation Fast Path)
+__declspec(dllexport) double enhance_edges_cpp(
+    const uint8_t* src, uint8_t* dst, int width, int height, int channels,
+    float strength, int policy, int num_threads, int chunk_size
+) {
+    float estimated_scale = (width >= 1920) ? 3.5f : ((width >= 1000) ? 2.0f : 1.5f);
+    return enhance_edges_scaled_cpp(src, dst, width, height, channels, strength, estimated_scale, policy, num_threads, chunk_size);
+}
+
+// Unified Super-Resolution: Sub-pixel Interpolation + Multi-Scale CAS (Zero-Allocation Fast Path)
 __declspec(dllexport) double upscale_and_enhance_cpp(
     const uint8_t* src, int src_w, int src_h, int channels,
     uint8_t* dst, int dst_w, int dst_h,
@@ -312,7 +342,8 @@ __declspec(dllexport) double upscale_and_enhance_cpp(
     }
 
     double t1 = upscale_frame_cpp(src, src_w, src_h, channels, tls_temp_buf.data(), dst_w, dst_h, method, policy, num_threads, chunk_size);
-    double t2 = enhance_edges_cpp(tls_temp_buf.data(), dst, dst_w, dst_h, channels, enhancement_strength, policy, num_threads, chunk_size);
+    float scale = static_cast<float>(dst_w) / static_cast<float>(src_w);
+    double t2 = enhance_edges_scaled_cpp(tls_temp_buf.data(), dst, dst_w, dst_h, channels, enhancement_strength, scale, policy, num_threads, chunk_size);
     return t1 + t2;
 }
 

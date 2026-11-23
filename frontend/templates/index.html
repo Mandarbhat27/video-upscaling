@@ -392,19 +392,19 @@
                                         <label class="small text-secondary">Threads</label>
                                         <select id="vid-threads" class="form-select form-select-sm bg-dark text-light border-secondary">
                                             <option value="1">1 Thread</option>
-                                            <option value="4" selected>4 Threads</option>
-                                            <option value="8">8 Threads</option>
-                                            <option value="12">12 Threads</option>
+                                            <option value="4">4 Threads</option>
+                                            <option value="8" selected>8 Threads (Recommended)</option>
+                                            <option value="12">12 Threads (Max)</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="small text-warning fw-bold"><i class="bi bi-magic me-1"></i> OpenMP Edge & Detail Enhancement</label>
+                                    <label class="small text-warning fw-bold"><i class="bi bi-magic me-1"></i> Multi-Scale CAS Super-Resolution</label>
                                     <select id="vid-enhancement" class="form-select form-select-sm bg-dark text-warning border-warning">
-                                        <option value="1.6" selected>⚡ Ultra Crisp (+1.6x - Recommended)</option>
-                                        <option value="2.0">🔥 Maximum Sharpness (+2.0x)</option>
-                                        <option value="1.0">🌿 Natural Detail (+1.0x)</option>
-                                        <option value="0.0">⚪ Off (Pure Interpolation)</option>
+                                        <option value="2.2" selected>⚡ Ultra Multi-Scale Super-Resolution (2.2x - Crystal Clear)</option>
+                                        <option value="2.5">🔥 Maximum Edge Recovery (2.5x - Extreme Sharpness)</option>
+                                        <option value="1.8">✨ Crisp Super-Resolution (1.8x)</option>
+                                        <option value="0.0">⚪ Pure Bicubic Interpolation (No Super-Res)</option>
                                     </select>
                                 </div>
                                 <div class="form-check form-switch mb-3">
@@ -585,13 +585,12 @@
                                     </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="small text-warning fw-bold"><i class="bi bi-magic me-1"></i> OpenMP Edge Sharpening & Detail Recovery</label>
+                                    <label class="small text-warning fw-bold"><i class="bi bi-magic me-1"></i> Multi-Scale CAS Super-Resolution</label>
                                     <select id="photo-enhancement" class="form-select form-select-sm bg-dark text-warning border-warning">
-                                        <option value="2.0" selected>⚡ Ultra Super-Resolution (2.0x Boost - Crystal Clear / Recommended)</option>
-                                        <option value="2.5">🔥 Maximum Edge Recovery (2.5x Boost - Extreme Sharpness)</option>
-                                        <option value="1.5">✨ Crisp Super-Resolution (1.5x Boost)</option>
-                                        <option value="1.0">🌿 Natural Detail (+1.0x Edge Boost)</option>
-                                        <option value="0.0">⚪ Academic Baseline (0.0x Pure Bicubic)</option>
+                                        <option value="2.2" selected>⚡ Ultra Multi-Scale Super-Resolution (2.2x - Crystal Clear)</option>
+                                        <option value="2.5">🔥 Maximum Edge Recovery (2.5x - Extreme Sharpness)</option>
+                                        <option value="1.8">✨ Crisp Super-Resolution (1.8x)</option>
+                                        <option value="0.0">⚪ Pure Bicubic Baseline (No Super-Res)</option>
                                     </select>
                                 </div>
                                 <button type="submit" class="btn btn-primary btn-sm w-100" id="photo-submit-btn">
