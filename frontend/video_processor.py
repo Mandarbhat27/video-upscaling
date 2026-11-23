@@ -1,4 +1,4 @@
-﻿import os
+import os
 import time
 import cv2
 import numpy as np
@@ -27,7 +27,7 @@ class VideoJobProcessor:
 
     def process_file(self, input_path, output_path, scale_factor=2.0, method="BICUBIC",
                      policy="OPENMP_STATIC", num_threads=8, adaptive=False, target_fps=30.0,
-                     enhancement=2.2, progress_callback=None):
+                     enhancement=3.5, progress_callback=None):
         self.is_processing = True
         self.preview_frames = []
         self.preview_raw_frames = []

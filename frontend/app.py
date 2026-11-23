@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sys
 import json
 import time
@@ -169,7 +169,7 @@ def upload_video():
     method = request.form.get('method', 'BICUBIC')
     threads = int(request.form.get('threads', 8))
     adaptive = request.form.get('adaptive') in ['true', 'True', '1', True]
-    enhancement = float(request.form.get('enhancement', 2.2))
+    enhancement = float(request.form.get('enhancement', 3.5))
 
     output_filename = f'upscaled_{filename}'
     output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
@@ -279,7 +279,7 @@ def upscale_photo():
     policy = request.form.get('policy', 'OPENMP_STATIC')
     method = request.form.get('method', 'BICUBIC')
     threads = int(request.form.get('threads', 8))
-    enhancement = float(request.form.get('enhancement', 2.2))
+    enhancement = float(request.form.get('enhancement', 3.5))
 
     src_h, src_w = img.shape[:2]
     src_pixels = src_w * src_h

@@ -32,7 +32,7 @@ class WebcamStreamer:
         self.chunk_size = 16
         self.target_fps = 120.0
         self.workload_multiplier = 1
-        self.enhancement_strength = 2.2
+        self.enhancement_strength = 3.5
         self.num_threads = 8  # OpenMP edge sharpening strength
         self.show_heatmap = False
 

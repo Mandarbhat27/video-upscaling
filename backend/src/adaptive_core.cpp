@@ -214,7 +214,7 @@ __declspec(dllexport) double upscale_frame_cpp(
     return (t_end - t_start) * 1000.0;
 }
 
-// Multi-Scale Contrast-Adaptive Sharpening (CAS) + Sub-pixel Edge Recovery using OpenMP
+// Hierarchical Multi-Scale Contrast-Adaptive Super-Resolution (Ultra-Clarity Engine)
 __declspec(dllexport) double enhance_edges_scaled_cpp(
     const uint8_t* src, uint8_t* dst, int width, int height, int channels,
     float strength, float scale_factor, int policy, int num_threads, int chunk_size
@@ -229,87 +229,93 @@ __declspec(dllexport) double enhance_edges_scaled_cpp(
         return (omp_get_wtime() - t_start) * 1000.0;
     }
 
-    // Scale-adaptive sampling radius: 1 for 1.5x-2x, 2 for 2.5x-3x, 3 for 4x
-    int R = std::clamp(static_cast<int>(std::round(scale_factor * 0.75f)), 1, 4);
-    float cboost = (strength > 0.3f) ? (1.0f + 0.045f * std::min(strength, 3.0f)) : 1.0f;
+    // Dynamic scale-adaptive multi-tap radii
+    int R1 = std::clamp(static_cast<int>(std::round(scale_factor * 0.6f)), 1, 3);
+    int R2 = std::clamp(static_cast<int>(std::round(scale_factor * 1.4f)), 2, 6);
 
-    // Boundary copy (rows 0..R-1 and height-R..height-1)
-    for (int y = 0; y < R; ++y) {
+    // Synthesis weights scaled by strength
+    float alpha = strength * 0.90f; // Sub-pixel fine edge step
+    float beta  = strength * 0.60f; // Medium contour recovery
+    float delta = strength * 0.35f; // Macroscopic structure boost
+    float cboost = 1.0f + 0.065f * std::min(strength, 5.0f); // Micro-contrast dynamic range
+
+    // Top and bottom boundaries
+    for (int y = 0; y < R2; ++y) {
         std::memcpy(dst + y * width * channels, src + y * width * channels, static_cast<size_t>(width) * channels);
         int by = height - 1 - y;
         std::memcpy(dst + by * width * channels, src + by * width * channels, static_cast<size_t>(width) * channels);
     }
 
-    auto process_cas_row = [&](int y) {
-        const uint8_t* row_curr = src + y * width * channels;
-        const uint8_t* row_up = src + (y - R) * width * channels;
-        const uint8_t* row_down = src + (y + R) * width * channels;
-        const uint8_t* row_up1 = src + (y - 1) * width * channels;
-        const uint8_t* row_down1 = src + (y + 1) * width * channels;
+    auto process_ultra_row = [&](int y) {
+        const uint8_t* row_c   = src + y * width * channels;
+        const uint8_t* row_u1  = src + (y - 1) * width * channels;
+        const uint8_t* row_d1  = src + (y + 1) * width * channels;
+        const uint8_t* row_uR1 = src + (y - R1) * width * channels;
+        const uint8_t* row_dR1 = src + (y + R1) * width * channels;
+        const uint8_t* row_uR2 = src + (y - R2) * width * channels;
+        const uint8_t* row_dR2 = src + (y + R2) * width * channels;
         uint8_t* dst_row = dst + y * width * channels;
 
-        // Border columns 0..R-1 and width-R..width-1
-        for (int x = 0; x < R; ++x) {
+        // Left and right boundary pixels
+        for (int x = 0; x < R2; ++x) {
             for (int c = 0; c < channels; ++c) {
-                dst_row[x * channels + c] = row_curr[x * channels + c];
+                dst_row[x * channels + c] = row_c[x * channels + c];
                 int rx = width - 1 - x;
-                dst_row[rx * channels + c] = row_curr[rx * channels + c];
+                dst_row[rx * channels + c] = row_c[rx * channels + c];
             }
         }
 
-        // Interior pixels
-        for (int x = R; x < width - R; ++x) {
-            int idx_c = x * channels;
-            int idx_l = (x - R) * channels;
-            int idx_r = (x + R) * channels;
-            int idx_l1 = (x - 1) * channels;
-            int idx_r1 = (x + 1) * channels;
+        // Interior scanline
+        for (int x = R2; x < width - R2; ++x) {
+            int idx_c   = x * channels;
+            int idx_l1  = (x - 1) * channels;
+            int idx_r1  = (x + 1) * channels;
+            int idx_lR1 = (x - R1) * channels;
+            int idx_rR1 = (x + R1) * channels;
+            int idx_lR2 = (x - R2) * channels;
+            int idx_rR2 = (x + R2) * channels;
 
             for (int c = 0; c < channels; ++c) {
-                float center = static_cast<float>(row_curr[idx_c + c]);
-                float up     = static_cast<float>(row_up[idx_c + c]);
-                float down   = static_cast<float>(row_down[idx_c + c]);
-                float left   = static_cast<float>(row_curr[idx_l + c]);
-                float right  = static_cast<float>(row_curr[idx_r + c]);
+                float P = static_cast<float>(row_c[idx_c + c]);
 
-                float min_val = std::min({center, up, down, left, right});
-                float max_val = std::max({center, up, down, left, right});
+                // 1-pixel fine cross
+                float B1 = (static_cast<float>(row_u1[idx_c + c]) + static_cast<float>(row_d1[idx_c + c]) +
+                            static_cast<float>(row_c[idx_l1 + c]) + static_cast<float>(row_c[idx_r1 + c])) * 0.25f;
 
-                float amp = std::min(min_val, 255.0f - max_val) / std::max(max_val, 1.0f);
-                if (amp < 0.0f) amp = 0.0f;
-                float w_cas = -std::sqrt(amp) * (strength * 0.32f);
+                // R1 medium contour cross
+                float B2 = (static_cast<float>(row_uR1[idx_c + c]) + static_cast<float>(row_dR1[idx_c + c]) +
+                            static_cast<float>(row_c[idx_lR1 + c]) + static_cast<float>(row_c[idx_rR1 + c])) * 0.25f;
 
-                float num = center + w_cas * (up + down + left + right);
-                float den = 1.0f + 4.0f * w_cas;
-                float cas_val = (std::abs(den) > 1e-4f) ? (num / den) : center;
-                cas_val = std::clamp(cas_val, min_val, max_val);
+                // R2 macroscopic structure cross
+                float B3 = (static_cast<float>(row_uR2[idx_c + c]) + static_cast<float>(row_dR2[idx_c + c]) +
+                            static_cast<float>(row_c[idx_lR2 + c]) + static_cast<float>(row_c[idx_rR2 + c])) * 0.25f;
 
-                float up1    = static_cast<float>(row_up1[idx_c + c]);
-                float down1  = static_cast<float>(row_down1[idx_c + c]);
-                float left1  = static_cast<float>(row_curr[idx_l1 + c]);
-                float right1 = static_cast<float>(row_curr[idx_r1 + c]);
-                float fine_lap = 4.0f * center - (up1 + down1 + left1 + right1);
+                float D1 = P - B1;
+                float D2 = P - B2;
+                float D3 = P - B3;
 
-                float res = cas_val + fine_lap * (strength * 0.16f);
-                if (cboost > 1.0f) {
-                    res = (res - 128.0f) * cboost + 128.0f;
-                }
+                // Multi-scale high-frequency detail synthesis
+                float res = P + alpha * D1 + beta * D2 + delta * D3;
+
+                // Micro-contrast and dynamic range stretch
+                res = (res - 128.0f) * cboost + 128.0f;
+
                 dst_row[idx_c + c] = clamp_to_byte(res);
             }
         }
     };
 
     if (policy == 0) { // Serial
-        for (int y = R; y < height - R; ++y) process_cas_row(y);
+        for (int y = R2; y < height - R2; ++y) process_ultra_row(y);
     } else if (policy == 2) { // OpenMP Dynamic
         #pragma omp parallel for num_threads(num_threads) schedule(dynamic, chunk_size)
-        for (int y = R; y < height - R; ++y) process_cas_row(y);
+        for (int y = R2; y < height - R2; ++y) process_ultra_row(y);
     } else if (policy == 3) { // OpenMP Guided
         #pragma omp parallel for num_threads(num_threads) schedule(guided, chunk_size)
-        for (int y = R; y < height - R; ++y) process_cas_row(y);
+        for (int y = R2; y < height - R2; ++y) process_ultra_row(y);
     } else { // OpenMP Static
         #pragma omp parallel for num_threads(num_threads) schedule(static, chunk_size)
-        for (int y = R; y < height - R; ++y) process_cas_row(y);
+        for (int y = R2; y < height - R2; ++y) process_ultra_row(y);
     }
 
     double t_end = omp_get_wtime();
