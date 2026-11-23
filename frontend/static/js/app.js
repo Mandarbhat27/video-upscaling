@@ -45,6 +45,70 @@ function switchMode(mode) {
     }
 }
 
+let currentStreamMode = 'webcam';
+
+function onStreamSourceChange(mode) {
+    currentStreamMode = mode;
+    const cctvBox = document.getElementById('cctv-config-box');
+    const badge = document.getElementById('active-stream-label');
+
+    if (mode === 'cctv_url') {
+        if (cctvBox) cctvBox.style.display = 'block';
+        if (badge) badge.innerText = 'Target: Live IP / CCTV Camera';
+    } else if (mode === 'cctv_campus') {
+        if (cctvBox) cctvBox.style.display = 'none';
+        if (badge) badge.innerText = 'Campus Gate 1 CCTV [Live Demo]';
+    } else {
+        if (cctvBox) cctvBox.style.display = 'none';
+        if (badge) badge.innerText = 'Local USB Webcam';
+    }
+
+    // Auto-restart if already streaming
+    if (cameraActive) {
+        toggleCamera();
+        setTimeout(() => toggleCamera(), 400);
+    }
+}
+
+function setCCTVPreset(preset) {
+    const urlInput = document.getElementById('cctv-stream-url');
+    if (urlInput) {
+        if (preset === 'phone') {
+            urlInput.value = 'http://192.168.1.15:8080/video';
+            urlInput.focus();
+        }
+    }
+}
+
+function toggleCredentialsHelper() {
+    const el = document.getElementById('cctv-cred-helper');
+    if (el) {
+        el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+    }
+}
+
+function applyRTSPBuilder() {
+    const ip = (document.getElementById('rtsp-ip').value || '').trim();
+    const port = (document.getElementById('rtsp-port').value || '').trim() || '554';
+    const user = (document.getElementById('rtsp-user').value || '').trim();
+    const pass = (document.getElementById('rtsp-pass').value || '').trim();
+
+    if (!ip) {
+        alert('Please enter camera IP address');
+        return;
+    }
+
+    let url = 'rtsp://';
+    if (user && pass) {
+        url += `${encodeURIComponent(user)}:${encodeURIComponent(pass)}@`;
+    } else if (user) {
+        url += `${encodeURIComponent(user)}@`;
+    }
+    url += `${ip}:${port}/Streaming/Channels/101`;
+    document.getElementById('cctv-stream-url').value = url;
+    document.getElementById('cctv-cred-helper').style.display = 'none';
+}
+
 function toggleCamera() {
     const btn = document.getElementById('cam-toggle-btn');
     const rawImg = document.getElementById('raw-video-img');
@@ -54,9 +118,18 @@ function toggleCamera() {
 
     if (!cameraActive) {
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Starting Engine...';
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Connecting Stream...';
 
-        fetch('/api/camera/start', { method: 'POST' })
+        const streamUrl = document.getElementById('cctv-stream-url') ? document.getElementById('cctv-stream-url').value.trim() : '';
+
+        fetch('/api/camera/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                mode: currentStreamMode,
+                stream_url: streamUrl
+            })
+        })
             .then(res => res.json())
             .then(data => {
                 btn.disabled = false;
@@ -64,7 +137,12 @@ function toggleCamera() {
                     cameraActive = true;
                     btn.classList.remove('btn-success');
                     btn.classList.add('btn-danger');
-                    btn.innerHTML = '<i class="bi bi-stop-fill me-1"></i> Stop Camera';
+                    btn.innerHTML = '<i class="bi bi-stop-fill me-1"></i> Stop Stream';
+
+                    if (data.source_label) {
+                        const lbl = document.getElementById('active-stream-label');
+                        if (lbl) lbl.innerText = data.source_label;
+                    }
 
                     rawPlaceholder.style.display = 'none';
                     upscaledPlaceholder.style.display = 'none';
@@ -345,6 +423,11 @@ function pollMetrics() {
             document.getElementById('stat-threads').innerText = data.num_threads + ' Threads';
             document.getElementById('stat-dropped').innerText = data.discarded_frames;
             document.getElementById('stat-switches').innerText = data.algorithm_switches + ' switches';
+
+            if (data.stream_source_label) {
+                const srcLbl = document.getElementById('active-stream-label');
+                if (srcLbl) srcLbl.innerText = data.stream_source_label;
+            }
 
             const badge = document.getElementById('stat-adaptive-badge');
             badge.innerText = data.state_message;

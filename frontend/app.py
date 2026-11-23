@@ -52,11 +52,18 @@ def index():
 def results():
     return render_template('results.html')
 
-# --- CAMERA / WEBCAM ENDPOINTS ---
+# --- CAMERA / WEBCAM & CCTV ENDPOINTS ---
 @app.route('/api/camera/start', methods=['POST'])
 def start_camera():
-    success = webcam_worker.start()
-    return jsonify({'status': 'ok' if success else 'error'})
+    data = request.get_json() or {}
+    mode = data.get('mode', 'webcam')
+    stream_url = data.get('stream_url', '')
+    success = webcam_worker.start(mode=mode, stream_url=stream_url)
+    return jsonify({
+        'status': 'ok' if success else 'error',
+        'mode': mode,
+        'source_label': webcam_worker.stream_source_label
+    })
 
 @app.route('/api/camera/stop', methods=['POST'])
 def stop_camera():

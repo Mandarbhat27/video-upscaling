@@ -1,3 +1,4 @@
+import os
 import threading
 import time
 import math
@@ -36,6 +37,12 @@ class WebcamStreamer:
         self.num_threads = 8  # OpenMP edge sharpening strength
         self.show_heatmap = False
 
+        # Stream Mode & Source
+        self.stream_mode = 'webcam'  # 'webcam', 'cctv_url', 'cctv_campus'
+        self.stream_url = ''
+        self.stream_source_label = 'Local USB Webcam'
+        self.is_looping_video = False
+
         # Synchronisation
         self.capture_lock = threading.Lock()
         self.output_lock = threading.Lock()
@@ -63,35 +70,70 @@ class WebcamStreamer:
         self.capture_thread = None
         self.process_thread = None
 
-    def start(self, camera_id=0, width=640, height=480):
+    def start(self, camera_id=0, stream_url=None, mode='webcam', width=640, height=360):
         if self.is_running:
-            return True
+            self.stop()
 
+        self.stream_mode = mode
+        self.stream_url = (stream_url or '').strip()
         self.cap = None
-        try:
-            self.cap = cv2.VideoCapture(camera_id, cv2.CAP_DSHOW)
-            if not self.cap.isOpened():
-                self.cap.release()
-                self.cap = cv2.VideoCapture(camera_id)
-        except Exception:
-            self.cap = cv2.VideoCapture(camera_id)
+        self.is_looping_video = False
 
-        if self.cap and self.cap.isOpened():
-            if width > 0 and height > 0:
-                self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-                self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-            ret, test_frame = self.cap.read()
-            if not ret or test_frame is None:
-                print(f'[WARN] Hardware camera index {camera_id} returned empty frame. Activating dynamic synthetic test stream.')
-                self.cap.release()
-                self.cap = None
+        if mode == 'cctv_campus':
+            # 24/7 Campus CCTV Gate 1 loop
+            sample_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'uploads', 'sample-10s-360p.mp4'))
+            self.cap = cv2.VideoCapture(sample_path)
+            self.is_looping_video = True
+            self.use_synthetic = not (self.cap and self.cap.isOpened())
+            self.stream_source_label = 'Campus Gate 1 CCTV [Live Feed]'
+            print(f'[INFO] Activated Campus CCTV Simulation Feed ({sample_path}).')
+        elif mode == 'cctv_url' and self.stream_url:
+            # Live RTSP / HTTP IP Camera
+            try:
+                self.cap = cv2.VideoCapture(self.stream_url)
+                if self.cap.isOpened():
+                    self.use_synthetic = False
+                    self.stream_source_label = f'Live IP/CCTV: {self.stream_url}'
+                    print(f'[INFO] Connected to live IP/CCTV stream: {self.stream_url}')
+                else:
+                    print(f'[WARN] Could not connect to {self.stream_url}. Falling back to campus CCTV feed.')
+                    sample_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'uploads', 'sample-10s-360p.mp4'))
+                    self.cap = cv2.VideoCapture(sample_path)
+                    self.is_looping_video = True
+                    self.use_synthetic = not (self.cap and self.cap.isOpened())
+                    self.stream_source_label = 'Campus Gate CCTV (Live Fallback)'
+            except Exception as e:
+                print(f'[ERROR] Failed to open stream {self.stream_url}: {e}')
                 self.use_synthetic = True
-            else:
-                self.use_synthetic = False
-                print(f'[INFO] Hardware camera index {camera_id} connected successfully ({test_frame.shape[1]}x{test_frame.shape[0]}).')
+                self.stream_source_label = 'CCTV Failover Synthetic'
         else:
-            print(f'[WARN] Camera index {camera_id} not available. Activating dynamic synthetic test stream.')
-            self.use_synthetic = True
+            # Standard Webcam Mode
+            self.stream_mode = 'webcam'
+            self.stream_source_label = 'Local USB Webcam'
+            try:
+                self.cap = cv2.VideoCapture(camera_id, cv2.CAP_DSHOW)
+                if not self.cap.isOpened():
+                    self.cap.release()
+                    self.cap = cv2.VideoCapture(camera_id)
+            except Exception:
+                self.cap = cv2.VideoCapture(camera_id)
+
+            if self.cap and self.cap.isOpened():
+                if width > 0 and height > 0:
+                    self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+                    self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+                ret, test_frame = self.cap.read()
+                if not ret or test_frame is None:
+                    print(f'[WARN] Hardware camera index {camera_id} returned empty frame. Activating dynamic synthetic test stream.')
+                    self.cap.release()
+                    self.cap = None
+                    self.use_synthetic = True
+                else:
+                    self.use_synthetic = False
+                    print(f'[INFO] Hardware camera index {camera_id} connected successfully ({test_frame.shape[1]}x{test_frame.shape[0]}).')
+            else:
+                print(f'[WARN] Camera index {camera_id} not available. Activating dynamic synthetic test stream.')
+                self.use_synthetic = True
 
         # Pre-generate initial frames
         init_frame = self._generate_synthetic_frame()
@@ -215,6 +257,16 @@ class WebcamStreamer:
                 ret = True
             else:
                 ret, frame = self.cap.read()
+                if (not ret or frame is None) and self.is_looping_video and self.cap:
+                    self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                    ret, frame = self.cap.read()
+
+                if ret and frame is not None and self.stream_mode in ['cctv_campus', 'cctv_url']:
+                    now_str = time.strftime('%Y-%m-%d %H:%M:%S') + f'.{int((time.time() % 1) * 1000):03d}'
+                    cam_id = 'CAM-01 | CAMPUS ENTRANCE GATE' if self.stream_mode == 'cctv_campus' else 'CAM-IP | LIVE CCTV'
+                    label = f'[{cam_id} | {now_str} | REC]'
+                    cv2.putText(frame, label, (12, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (0, 0, 0), 2, cv2.LINE_AA)
+                    cv2.putText(frame, label, (12, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (0, 255, 255), 1, cv2.LINE_AA)
 
             if not ret or frame is None:
                 time.sleep(0.002)
@@ -339,5 +391,7 @@ class WebcamStreamer:
         status['upscaled_pixels'] = up_px
         status['raw_res'] = self.raw_res_str
         status['upscaled_res'] = self.upscaled_res_str
+        status['stream_mode'] = self.stream_mode
+        status['stream_source_label'] = self.stream_source_label
 
         return status

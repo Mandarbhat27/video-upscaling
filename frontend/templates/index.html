@@ -49,8 +49,63 @@
             </div>
         </div>
 
-        <!-- WEBCAM MODE CONTAINER -->
+        <!-- WEBCAM / LIVE CCTV MODE CONTAINER -->
         <div id="webcam-section">
+            <!-- Source Selector Strip -->
+            <div class="card bg-black border-secondary border-opacity-50 mb-2 p-2 shadow-sm">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <span class="small fw-bold text-light"><i class="bi bi-broadcast text-danger me-1"></i> Live Stream Input:</span>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <input type="radio" class="btn-check" name="stream-source-opt" id="src-webcam" value="webcam" checked onchange="onStreamSourceChange('webcam')">
+                            <label class="btn btn-outline-info btn-sm px-3" for="src-webcam"><i class="bi bi-webcam me-1"></i> USB Webcam</label>
+
+                            <input type="radio" class="btn-check" name="stream-source-opt" id="src-cctv-url" value="cctv_url" onchange="onStreamSourceChange('cctv_url')">
+                            <label class="btn btn-outline-warning btn-sm px-3" for="src-cctv-url"><i class="bi bi-camera-video me-1"></i> Live IP / CCTV Stream (RTSP / Phone)</label>
+
+                            <input type="radio" class="btn-check" name="stream-source-opt" id="src-cctv-campus" value="cctv_campus" onchange="onStreamSourceChange('cctv_campus')">
+                            <label class="btn btn-outline-success btn-sm px-3" for="src-cctv-campus"><i class="bi bi-building me-1"></i> Campus Gate CCTV (24/7 Demo)</label>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="badge bg-dark border border-secondary text-info px-2 py-1" id="active-stream-badge">
+                            <i class="bi bi-record-circle text-danger me-1"></i> <span id="active-stream-label">Local USB Webcam</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CCTV / IP Camera Stream Configuration Panel (Collapsible) -->
+            <div id="cctv-config-box" class="card bg-dark border-warning border-opacity-50 mb-2 p-3 shadow-sm" style="display: none;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="small fw-bold text-warning"><i class="bi bi-hdd-network me-1"></i> Connect Live IP / CCTV Stream (RTSP / HTTP)</span>
+                    <span class="badge bg-black text-secondary border border-secondary">Works with Phone "IP Webcam" App, Hikvision, Dahua, CP Plus</span>
+                </div>
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-7">
+                        <label class="small text-secondary">Stream URL (RTSP or HTTP)</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-black text-warning border-secondary"><i class="bi bi-link-45deg"></i></span>
+                            <input type="text" class="form-control bg-black text-light border-secondary" id="cctv-stream-url" placeholder="http://192.168.1.15:8080/video or rtsp://user:pass@ip:554/stream">
+                        </div>
+                    </div>
+                    <div class="col-md-5 d-flex gap-2 align-items-end">
+                        <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" onclick="setCCTVPreset('phone')"><i class="bi bi-phone me-1"></i> Phone IP Webcam Preset</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" onclick="toggleCredentialsHelper()"><i class="bi bi-key me-1"></i> RTSP Builder</button>
+                    </div>
+                </div>
+                <!-- Credentials Helper -->
+                <div id="cctv-cred-helper" class="mt-2 pt-2 border-top border-secondary border-opacity-25" style="display: none;">
+                    <div class="row g-2">
+                        <div class="col-3"><input type="text" class="form-control form-control-sm bg-black text-light border-secondary" id="rtsp-ip" placeholder="IP Address (e.g. 192.168.1.100)"></div>
+                        <div class="col-2"><input type="number" class="form-control form-control-sm bg-black text-light border-secondary" id="rtsp-port" placeholder="Port (554)" value="554"></div>
+                        <div class="col-2"><input type="text" class="form-control form-control-sm bg-black text-light border-secondary" id="rtsp-user" placeholder="Username (admin)"></div>
+                        <div class="col-3"><input type="password" class="form-control form-control-sm bg-black text-light border-secondary" id="rtsp-pass" placeholder="Password"></div>
+                        <div class="col-2"><button type="button" class="btn btn-warning btn-sm w-100" onclick="applyRTSPBuilder()">Build URL</button></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Controls Toolbar -->
             <div class="card bg-black border-secondary mb-3 shadow-sm">
                 <div class="card-body py-2 px-3">
@@ -58,7 +113,7 @@
                         <!-- Camera Start/Stop -->
                         <div class="col-auto">
                             <button id="cam-toggle-btn" class="btn btn-success btn-sm" onclick="toggleCamera()">
-                                <i class="bi bi-play-fill me-1"></i> Start Camera
+                                <i class="bi bi-play-fill me-1"></i> Start Live Stream
                             </button>
                         </div>
 
@@ -98,10 +153,10 @@
                         <div class="col-auto">
                             <label class="small text-warning d-block"><i class="bi bi-magic me-1"></i>Detail Boost</label>
                             <select id="ctrl-enhancement" class="form-select form-select-sm bg-dark text-warning border-warning" onchange="updateControls()">
-                                <option value="1.6" selected>⚡ Ultra Crisp (+1.6x)</option>
-                                <option value="2.0">🔥 Maximum (+2.0x)</option>
-                                <option value="1.0">🌿 Natural (+1.0x)</option>
-                                <option value="0.0">⚪ Off (0.0x)</option>
+                                <option value="3.5" selected>🔥 Extreme Super-Resolution (+3.5x)</option>
+                                <option value="4.5">⚡ Cinematic Maximum (+4.5x)</option>
+                                <option value="2.0">✨ Balanced Super-Res (+2.0x)</option>
+                                <option value="0.0">⚪ Off (Pure Bicubic)</option>
                             </select>
                         </div>
 
