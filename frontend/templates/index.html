@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adaptive Real-Time Video Upscaling (OpenMP)</title>
+    <title>VISIONBOOST – Real-Time Visual Enhancement Engine</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -16,12 +16,13 @@
         <div class="container-fluid">
             <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#">
                 <i class="bi bi-cpu-fill text-primary fs-3"></i>
-                <span>Adaptive Real-Time Video Upscaling</span>
-                <span class="badge bg-primary text-uppercase ms-2">OpenMP + C++17</span>
+                <span>VISIONBOOST</span>
+                <span class="badge bg-primary text-uppercase ms-1">Real-Time Visual Enhancement Engine</span>
+                <span class="badge bg-dark border border-secondary text-info ms-2">RIT Dept. of AI & DS</span>
             </a>
             <div class="d-flex gap-3 align-items-center">
                 <a href="/" class="btn btn-outline-primary btn-sm active"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
-                <a href="/results" class="btn btn-outline-info btn-sm"><i class="bi bi-graph-up me-1"></i> Benchmark Results</a>
+                <a href="/results" class="btn btn-outline-info btn-sm"><i class="bi bi-graph-up me-1"></i> Academic Benchmark Matrix</a>
                 <span id="system-status-pill" class="badge bg-success p-2"><i class="bi bi-check-circle-fill me-1"></i> Engine Active</span>
             </div>
         </div>
@@ -30,9 +31,10 @@
     <div class="container-fluid px-4 py-3">
         <!-- Mode Toggle & Global Banner -->
         <div class="row mb-3 align-items-center">
-            <div class="col-md-6">
-                <h5 class="fw-bold mb-1">Quality-Aware Parallel Processing Pipeline</h5>
-                <p class="text-secondary small mb-0">Dynamic computational budget management using OpenMP CPU parallelisation.</p>
+            <div class="col-md-7">
+                <h5 class="fw-bold mb-1"><i class="bi bi-stars text-warning me-1"></i> VISIONBOOST: Multi-Core Parallel Visual Enhancement & Surveillance Super-Resolution</h5>
+                <p class="text-secondary small mb-0">Ramaiah Institute of Technology | Dept. of AI & DS | Guided by <strong>Dr. Vinay T. R.</strong><br>
+                <span class="text-info fw-semibold">Team:</span> Mandar Bhat (1MS24AD038), M R Abhishek (1MS24AD036), Surajit Mondal (1MS24AD060)</p>
             </div>
             <div class="col-md-6 d-flex justify-content-end gap-2">
                 <div class="btn-group" role="group">
@@ -188,6 +190,52 @@
                                 <button type="button" class="btn btn-outline-warning" id="wl-increased" onclick="setWorkload('INCREASED')">2x Load</button>
                                 <button type="button" class="btn btn-outline-danger" id="wl-high" onclick="setWorkload('HIGH')">4x Heavy</button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lighting & Sensor Adjustments Panel (Section 1.4 Objectives) -->
+            <div class="card bg-black border-secondary border-opacity-50 mb-3 shadow-sm">
+                <div class="card-body py-2 px-3">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-auto">
+                            <span class="small fw-bold text-info"><i class="bi bi-sliders me-1"></i> Sensor & Lighting (Sec 1.4):</span>
+                        </div>
+                        <!-- Brightness Slider -->
+                        <div class="col-auto">
+                            <label class="small text-secondary d-flex justify-content-between">
+                                <span>Brightness</span>
+                                <span class="text-light fw-bold ms-2" id="val-brightness">0</span>
+                            </label>
+                            <input type="range" class="form-range form-range-sm" id="ctrl-brightness" min="-50" max="50" value="0" style="width: 120px;" oninput="updateLightingControls()">
+                        </div>
+                        <!-- Contrast / Gamma Slider -->
+                        <div class="col-auto border-start border-secondary ps-3">
+                            <label class="small text-secondary d-flex justify-content-between">
+                                <span>Contrast (Gamma)</span>
+                                <span class="text-light fw-bold ms-2" id="val-contrast">1.0x</span>
+                            </label>
+                            <input type="range" class="form-range form-range-sm" id="ctrl-contrast" min="0.5" max="2.0" step="0.1" value="1.0" style="width: 120px;" oninput="updateLightingControls()">
+                        </div>
+                        <!-- Low-Light CCTV Night Boost (CLAHE / Hist Eq - Silva et al. [5]) -->
+                        <div class="col-auto border-start border-secondary ps-3">
+                            <div class="form-check form-switch mt-1">
+                                <input class="form-check-input" type="checkbox" id="ctrl-lowlight" onchange="updateLightingControls()">
+                                <label class="form-check-label small fw-bold text-warning" for="ctrl-lowlight"><i class="bi bi-moon-stars-fill me-1"></i> Low-Light Night Boost (CLAHE)</label>
+                            </div>
+                        </div>
+                        <!-- Denoising Filter (Dolwithayaku et al. [4]) -->
+                        <div class="col-auto border-start border-secondary ps-3">
+                            <div class="form-check form-switch mt-1">
+                                <input class="form-check-input" type="checkbox" id="ctrl-denoise" onchange="updateLightingControls()">
+                                <label class="form-check-label small fw-bold text-info" for="ctrl-denoise"><i class="bi bi-water me-1"></i> Spatial Denoise Filter</label>
+                            </div>
+                        </div>
+                        <div class="col-auto ms-auto">
+                            <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 small" onclick="resetLightingControls()">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                            </button>
                         </div>
                     </div>
                 </div>

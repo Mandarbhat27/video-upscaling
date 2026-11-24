@@ -37,6 +37,13 @@ class WebcamStreamer:
         self.num_threads = 8  # OpenMP edge sharpening strength
         self.show_heatmap = False
 
+        # Lighting & Sensor Adjustments (Section 1.4 Objectives)
+        self.brightness = 0           # -50 to +50
+        self.contrast = 1.0           # 0.5 to 2.0
+        self.low_light_boost = False  # CLAHE (Silva et al. [5])
+        self.denoise = False          # Denoising filter (Dolwithayaku et al. [4])
+        self.clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
+
         # Stream Mode & Source
         self.stream_mode = 'webcam'  # 'webcam', 'cctv_url', 'cctv_campus'
         self.stream_url = ''
@@ -170,7 +177,8 @@ class WebcamStreamer:
 
     def set_controls(self, scale=None, method=None, policy=None, threads=None,
                      target_fps=None, adaptive=None, workload=None, show_heatmap=None,
-                     enhancement=None):
+                     enhancement=None, brightness=None, contrast=None,
+                     low_light_boost=None, denoise=None):
         if scale is not None:
             self.scale_factor = float(scale)
         if method is not None:
@@ -195,6 +203,14 @@ class WebcamStreamer:
             self.show_heatmap = bool(show_heatmap)
         if enhancement is not None:
             self.enhancement_strength = float(enhancement)
+        if brightness is not None:
+            self.brightness = int(brightness)
+        if contrast is not None:
+            self.contrast = float(contrast)
+        if low_light_boost is not None:
+            self.low_light_boost = bool(low_light_boost)
+        if denoise is not None:
+            self.denoise = bool(denoise)
 
     def _generate_synthetic_frame(self, w=640, h=360):
         t = time.time()
@@ -263,7 +279,7 @@ class WebcamStreamer:
 
                 if ret and frame is not None and self.stream_mode in ['cctv_campus', 'cctv_url']:
                     now_str = time.strftime('%Y-%m-%d %H:%M:%S') + f'.{int((time.time() % 1) * 1000):03d}'
-                    cam_id = 'CAM-01 | CAMPUS ENTRANCE GATE' if self.stream_mode == 'cctv_campus' else 'CAM-IP | LIVE CCTV'
+                    cam_id = 'RIT-CAM-01 | RIT CAMPUS MAIN GATE' if self.stream_mode == 'cctv_campus' else 'CAM-IP | LIVE CCTV'
                     label = f'[{cam_id} | {now_str} | REC]'
                     cv2.putText(frame, label, (12, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (0, 0, 0), 2, cv2.LINE_AA)
                     cv2.putText(frame, label, (12, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (0, 255, 255), 1, cv2.LINE_AA)
@@ -342,6 +358,25 @@ class WebcamStreamer:
                     pass
 
             display_upscaled = upscaled_frame
+
+            # Apply real-time lighting & sensor adjustments (Section 1.4 Objectives)
+            if self.brightness != 0 or abs(self.contrast - 1.0) > 0.05:
+                display_upscaled = cv2.convertScaleAbs(display_upscaled, alpha=self.contrast, beta=self.brightness)
+
+            if self.low_light_boost:
+                # Fast CLAHE on Luminance channel (Silva et al. [5])
+                try:
+                    ycrcb = cv2.cvtColor(display_upscaled, cv2.COLOR_BGR2YCrCb)
+                    y, cr, cb = cv2.split(ycrcb)
+                    y = self.clahe.apply(y)
+                    display_upscaled = cv2.cvtColor(cv2.merge([y, cr, cb]), cv2.COLOR_YCrCb2BGR)
+                except Exception:
+                    pass
+
+            if self.denoise:
+                # Spatial Denoising (Dolwithayaku et al. [4])
+                display_upscaled = cv2.GaussianBlur(display_upscaled, (3, 3), 0.75)
+
             if self.show_heatmap:
                 try:
                     gray = cv2.cvtColor(upscaled_frame, cv2.COLOR_BGR2GRAY)

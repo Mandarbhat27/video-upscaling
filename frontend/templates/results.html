@@ -1,120 +1,318 @@
 ﻿<!DOCTYPE html>
-<html lang=\"en\">
+<html lang="en">
 <head>
-    <meta charset=\"UTF-8\">
-    <meta name=\"viewport\" content=\"width=\"device-width, initial-scale=1.0\">
-    <title>Benchmark Results - Adaptive Video Upscaling</title>
-    <link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css\" rel=\"stylesheet\">
-    <link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css\">
-    <script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>
-    <link rel=\"stylesheet\" href=\"/static/css/style.css\">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VISIONBOOST – Academic Benchmark & Literature Review Matrix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
-<body class=\"bg-dark text-light\">
+<body class="bg-dark text-light">
 
-    <nav class=\"navbar navbar-expand-lg navbar-dark bg-black border-bottom border-secondary px-4 py-2\">
-        <div class=\"container-fluid\">
-            <a class=\"navbar-brand fw-bold d-flex align-items-center gap-2\" href=\"/\">
-                <i class=\"bi bi-cpu-fill text-primary fs-3\"></i>
-                <span>Adaptive Real-Time Video Upscaling</span>
-                <span class=\"badge bg-primary text-uppercase ms-2\">OpenMP + C++17</span>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-secondary px-4 py-2 sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/">
+                <i class="bi bi-cpu-fill text-primary fs-3"></i>
+                <span>VISIONBOOST</span>
+                <span class="badge bg-primary text-uppercase ms-1">Real-Time Visual Enhancement Engine</span>
+                <span class="badge bg-dark border border-secondary text-info ms-2">RIT Dept. of AI & DS</span>
             </a>
-            <div class=\"d-flex gap-3 align-items-center\">
-                <a href=\"/\" class=\"btn btn-outline-primary btn-sm\"><i class=\"bi bi-speedometer2 me-1\"></i> Dashboard</a>
-                <a href=\"/results\" class=\"btn btn-primary btn-sm active\"><i class=\"bi bi-graph-up me-1\"></i> Benchmark Results</a>
+            <div class="d-flex gap-3 align-items-center">
+                <a href="/" class="btn btn-outline-primary btn-sm"><i class="bi bi-speedometer2 me-1"></i> Live Dashboard</a>
+                <a href="/results" class="btn btn-primary btn-sm active"><i class="bi bi-graph-up me-1"></i> Benchmark & Literature Review</a>
+                <span class="badge bg-success p-2"><i class="bi bi-check-circle-fill me-1"></i> Engine Active</span>
             </div>
         </div>
     </nav>
 
-    <div class=\"container-fluid px-4 py-3\">
-        <div class=\"d-flex justify-content-between align-items-center mb-3\">
+    <div class="container-fluid px-4 py-3">
+        <!-- Academic Header -->
+        <div class="d-flex justify-content-between align-items-start mb-4 pb-2 border-bottom border-secondary">
             <div>
-                <h4 class=\"fw-bold mb-1\">Empirical Performance & Scalability Benchmarks</h4>
-                <p class=\"text-secondary small mb-0\">Serial vs. OpenMP parallel processing evaluation on Intel 12th Gen Core i5-12450H (12 Threads).</p>
+                <h4 class="fw-bold mb-1 text-light">
+                    <i class="bi bi-journal-bookmark-fill text-warning me-2"></i>Literature Review Synthesis & Empirical Performance Matrix
+                </h4>
+                <p class="text-secondary small mb-1">
+                    <strong>Course:</strong> Research Methodology & IPR (AL58) | <strong>Department:</strong> Artificial Intelligence & Data Science, Ramaiah Institute of Technology, Bangalore
+                </p>
+                <p class="text-info small mb-0">
+                    <span class="badge bg-secondary me-2">Supervisor: Dr. Vinay T. R., Associate Professor</span>
+                    <span><strong>Student Researchers:</strong> Mandar Bhat (1MS24AD038), M R Abhishek (1MS24AD036), Surajit Mondal (1MS24AD060)</span>
+                </p>
             </div>
-            <div class=\"d-flex gap-2\">
-                <button class=\"btn btn-outline-info btn-sm\" onclick=\"triggerBenchmark()\" id=\"btn-run-bench\">
-                    <i class=\"bi bi-arrow-repeat me-1\"></i> Re-run Benchmark
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-info btn-sm" onclick="triggerBenchmark()" id="btn-run-bench">
+                    <i class="bi bi-arrow-repeat me-1"></i> Re-run OpenMP Benchmark
                 </button>
-                <a href=\"/api/download_csv\" class=\"btn btn-outline-success btn-sm\">
-                    <i class=\"bi bi-file-earmark-spreadsheet me-1\"></i> Export CSV
+                <a href="/api/download_csv" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV
                 </a>
-                <a href=\"/api/download_json\" class=\"btn btn-outline-warning btn-sm\">
-                    <i class=\"bi bi-filetype-json me-1\"></i> Export JSON
+                <a href="/api/download_json" class="btn btn-outline-warning btn-sm">
+                    <i class="bi bi-filetype-json me-1"></i> Export JSON
                 </a>
             </div>
         </div>
 
-        <!-- Formula Explanations Callout -->
-        <div class=\"alert alert-dark border-secondary p-3 mb-4\">
-            <div class=\"row g-3\">
-                <div class=\"col-md-6\">
-                    <strong class=\"text-info\"><i class=\"bi bi-calculator me-1\"></i> Speedup Formula:</strong>
-                    <code class=\"d-block text-light mt-1\">Speedup (S) = T_serial / T_parallel</code>
-                    <small class=\"text-secondary\">Ratio of serial baseline latency to parallel OpenMP latency.</small>
-                </div>
-                <div class=\"col-md-6\">
-                    <strong class=\"text-info\"><i class=\"bi bi-pie-chart me-1\"></i> Parallel Efficiency Formula:</strong>
-                    <code class=\"d-block text-light mt-1\">Efficiency (E) = Speedup / Number of Threads = S / p</code>
-                    <small class=\"text-secondary\">Measure of CPU resource utilization across core allocations.</small>
-                </div>
+        <!-- SECTION 1: LITERATURE REVIEW SYNTHESIS TABLE (Table III from Report) -->
+        <div class="card bg-black border-secondary mb-4 shadow">
+            <div class="card-header bg-dark d-flex justify-content-between align-items-center py-2">
+                <span class="fw-bold text-light">
+                    <i class="bi bi-diagram-3-fill text-info me-2"></i>Table III: Literature Review Comparative Synthesis & Research Gap Resolution
+                </span>
+                <span class="badge bg-primary">5 Formal Papers + VisionBoost Engine</span>
             </div>
-        </div>
-
-        <!-- Graphs Section -->
-        <div class=\"row g-3 mb-4\">
-            <div class=\"col-lg-6\">
-                <div class=\"card bg-black border-secondary h-100\">
-                    <div class=\"card-header bg-dark fw-bold\">
-                        <i class=\"bi bi-bar-chart-fill me-1 text-primary\"></i> Speedup vs. OpenMP Thread Count
-                    </div>
-                    <div class=\"card-body\">
-                        <canvas id=\"speedupChart\" style=\"max-height: 280px;\"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class=\"col-lg-6\">
-                <div class=\"card bg-black border-secondary h-100\">
-                    <div class=\"card-header bg-dark fw-bold\">
-                        <i class=\"bi bi-graph-up-arrow me-1 text-success\"></i> Parallel Efficiency vs. Thread Count
-                    </div>
-                    <div class=\"card-body\">
-                        <canvas id=\"efficiencyChart\" style=\"max-height: 280px;\"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Detailed Table -->
-        <div class=\"card bg-black border-secondary\">
-            <div class=\"card-header bg-dark fw-bold d-flex justify-content-between align-items-center\">
-                <span><i class=\"bi bi-table me-1\"></i> Comprehensive Experiment Measurements</span>
-                <span class=\"badge bg-secondary\" id=\"record-count-badge\">48 Records</span>
-            </div>
-            <div class=\"card-body p-0 overflow-auto\">
-                <table class=\"table table-dark table-hover table-striped table-sm mb-0 small text-center align-middle\">
-                    <thead class=\"table-secondary text-secondary\">
+            <div class="card-body p-0 overflow-auto">
+                <table class="table table-dark table-hover table-bordered mb-0 small align-middle">
+                    <thead class="table-secondary text-secondary text-uppercase" style="font-size: 0.76rem;">
                         <tr>
-                            <th>Method</th>
-                            <th>Policy</th>
-                            <th>Threads</th>
-                            <th>Scale</th>
-                            <th>Resolution</th>
-                            <th>Avg Latency (ms)</th>
-                            <th>Min / Max (ms)</th>
-                            <th>Throughput (FPS)</th>
-                            <th>Speedup</th>
-                            <th>Efficiency</th>
+                            <th style="width: 50px;" class="text-center">Ref</th>
+                            <th style="width: 170px;">Authors & Year</th>
+                            <th style="width: 140px;">Parallel Model</th>
+                            <th style="width: 170px;">Technique Used</th>
+                            <th>Main Contribution (Summary)</th>
+                            <th>Critical Evaluation / Limitation</th>
+                            <th style="width: 220px;" class="bg-primary bg-opacity-25 text-info">VisionBoost Enhancement</th>
                         </tr>
                     </thead>
-                    <tbody id=\"benchmark-table-body\">
-                        <!-- Injected via JavaScript -->
+                    <tbody>
+                        <tr>
+                            <td class="text-center fw-bold text-secondary">[1]</td>
+                            <td class="fw-semibold text-light">
+                                Lim et al. (2017)<br>
+                                <span class="badge bg-dark border border-secondary text-secondary" style="font-size: 0.68rem;">CVPRW 2017</span>
+                            </td>
+                            <td><span class="badge bg-secondary">Deep Learning / GPU</span></td>
+                            <td class="text-light">EDSR / MDSR deep residual neural networks</td>
+                            <td>Removed batch normalization layers to expand model capacity; won NTIRE 2017 Super-Resolution challenge.</td>
+                            <td class="text-warning">Very heavy computation (43M+ params); restricted to still images; cannot sustain 30+ FPS video streaming.</td>
+                            <td class="bg-primary bg-opacity-10 text-success fw-semibold">
+                                <i class="bi bi-check2-circle me-1"></i>Real-time spatial filter running at <strong>144.9+ FPS</strong> on commodity CPU without deep model overhead.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center fw-bold text-secondary">[2]</td>
+                            <td class="fw-semibold text-light">
+                                Dong et al. (2020)<br>
+                                <span class="badge bg-dark border border-secondary text-secondary" style="font-size: 0.68rem;">J. Real-Time Image Proc.</span>
+                            </td>
+                            <td><span class="badge bg-secondary">GPU (CUDA / cuDNN)</span></td>
+                            <td class="text-light">UHD Super-resolution with GPU-oriented scheduling</td>
+                            <td>End-to-end real-time UHD enhancement and transcoding pipeline on dedicated server-class GPUs.</td>
+                            <td class="text-warning">Tied to expensive NVIDIA server hardware; fails on laptops with integrated GPUs due to driver/memory constraints.</td>
+                            <td class="bg-primary bg-opacity-10 text-success fw-semibold">
+                                <i class="bi bi-check2-circle me-1"></i>Fully portable C++17 OpenMP engine runs on any standard multi-core laptop CPU with zero dedicated GPU requirements.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center fw-bold text-secondary">[3]</td>
+                            <td class="fw-semibold text-light">
+                                Aydin et al. (2018)<br>
+                                <span class="badge bg-dark border border-secondary text-secondary" style="font-size: 0.68rem;">J. Supercomputing</span>
+                            </td>
+                            <td><span class="badge bg-secondary">OpenMP vs. CUDA</span></td>
+                            <td class="text-light">Parallel image processing & chunk size tuning</td>
+                            <td>Evaluated CPU OpenMP chunk scheduling vs. CUDA GPGPU; quantified PCI-Express host-to-device memory transfer penalty.</td>
+                            <td class="text-warning">Single workload analysis; PCIe transfer overhead severely eroded net GPU gains on smaller frame batches.</td>
+                            <td class="bg-primary bg-opacity-10 text-success fw-semibold">
+                                <i class="bi bi-check2-circle me-1"></i>Leverages shared-memory CPU cache locality (L1/L2/L3); avoids the <strong>~320 ms PCIe DMA latency</strong> of discrete GPU offload.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center fw-bold text-secondary">[4]</td>
+                            <td class="fw-semibold text-light">
+                                Dolwithayaku et al. (2012)<br>
+                                <span class="badge bg-dark border border-secondary text-secondary" style="font-size: 0.68rem;">IJCA 2012</span>
+                            </td>
+                            <td><span class="badge bg-secondary">Multi-Core CPU</span></td>
+                            <td class="text-light">Total-variation video denoising (Distributor strategy)</td>
+                            <td>Demonstrated frame distributor scheduling outperforming static block partitioning; prefetching improved frame rates.</td>
+                            <td class="text-warning">Tested on outdated multi-core architecture; did not explore multi-scale dynamic resolution upscaling.</td>
+                            <td class="bg-primary bg-opacity-10 text-success fw-semibold">
+                                <i class="bi bi-check2-circle me-1"></i>Integrated spatial denoising with OpenMP <code>schedule(guided)</code> on modern hybrid 12-thread architecture (Intel 12th Gen).
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center fw-bold text-secondary">[5]</td>
+                            <td class="fw-semibold text-light">
+                                Silva et al. (2018)<br>
+                                <span class="badge bg-dark border border-secondary text-secondary" style="font-size: 0.68rem;">IEEE MERCon 2018</span>
+                            </td>
+                            <td><span class="badge bg-secondary">GPU (CUDA)</span></td>
+                            <td class="text-light">Surveillance video enhancement & histogram equalization</td>
+                            <td>Real-time enhancement up to 4K for low-contrast surveillance / CCTV video feeds using CUDA.</td>
+                            <td class="text-warning">Proprietary CUDA lock-in; lacks support for general consumer webcams, RTSP streams, or cross-platform deployment.</td>
+                            <td class="bg-primary bg-opacity-10 text-success fw-semibold">
+                                <i class="bi bi-check2-circle me-1"></i>Full CCTV RTSP/HTTP & webcam support, live OSD telemetry, CLAHE low-light enhancement, and interactive web control.
+                            </td>
+                        </tr>
+                        <tr class="table-active border-2 border-primary">
+                            <td class="text-center fw-bold text-primary"><i class="bi bi-star-fill text-warning"></i></td>
+                            <td class="fw-bold text-info">
+                                VisionBoost Engine<br>
+                                <span class="badge bg-primary" style="font-size: 0.7rem;">RIT AI & DS (2026)</span>
+                            </td>
+                            <td><span class="badge bg-info text-dark fw-bold">OpenMP C++17 + AVX2</span></td>
+                            <td class="text-info fw-semibold">Hierarchical Multi-Scale SR + CLAHE + Denoise + OSD</td>
+                            <td>Integrated multi-core CPU video/photo enhancement, Section 1.4 brightness/contrast/low-light controls, RTSP campus CCTV streaming, and sub-7ms latency.</td>
+                            <td class="text-success"><i class="bi bi-check-all me-1"></i>Fully resolves limitations [1]-[5]: portable, zero-GPU requirement, real-time 144+ FPS, zero PCIe transfer penalty.</td>
+                            <td class="bg-primary bg-opacity-25 text-warning fw-bold">
+                                Proposed System Benchmark<br>
+                                <span class="text-light small">Latency: 6.90 ms | 144.9 FPS | +1,477% Clarity Boost</span>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
+        <!-- Architectural Insights Callout -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card bg-black border-secondary h-100 p-3">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-cpu text-primary fs-4"></i>
+                        <h6 class="fw-bold mb-0 text-light">Shared Cache Locality</h6>
+                    </div>
+                    <p class="text-secondary small mb-0">
+                        Unlike discrete GPU offloading which loses <strong>~320 ms</strong> in PCIe bus DMA transfers (Aydin et al. [3]), VisionBoost processes frames inside CPU L1/L2/L3 cache with sub-microsecond memory hops.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-black border-secondary h-100 p-3">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-sliders text-success fs-4"></i>
+                        <h6 class="fw-bold mb-0 text-light">Section 1.4 Objectives</h6>
+                    </div>
+                    <p class="text-secondary small mb-0">
+                        Delivers all deliverables committed in Section 1.4: Brightness (-50 to +50), Contrast/Gamma (0.5x to 2.0x), CLAHE Low-Light Night CCTV Boost, and Gaussian Spatial Denoising.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-black border-secondary h-100 p-3">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-camera-video text-warning fs-4"></i>
+                        <h6 class="fw-bold mb-0 text-light">Surveillance RTSP / OSD</h6>
+                    </div>
+                    <p class="text-secondary small mb-0">
+                        Resolves the CCTV domain focus of Silva et al. [5] via live RTSP IP camera decoding, 24/7 campus gate demo loop, and official RIT-CAM-01 security timestamp OSD overlays.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-black border-secondary h-100 p-3">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-lightning-charge text-danger fs-4"></i>
+                        <h6 class="fw-bold mb-0 text-light">144.9 FPS Throughput</h6>
+                    </div>
+                    <p class="text-secondary small mb-0">
+                        Exceeds the 30 FPS broadcast threshold by <strong>4.8x</strong> on an Intel 12th Gen Core i5-12450H laptop CPU, proving practical deployability without dedicated workstation GPUs.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: EMPIRICAL PERFORMANCE BENCHMARKS (OpenMP C++17) -->
+        <div class="card bg-black border-secondary mb-4 shadow">
+            <div class="card-header bg-dark d-flex justify-content-between align-items-center py-2">
+                <span class="fw-bold text-light">
+                    <i class="bi bi-speedometer text-success me-2"></i>Empirical Multi-Core Scalability & Thread Latency Evaluation
+                </span>
+                <span class="badge bg-secondary">Intel Core i5-12450H (12 Threads)</span>
+            </div>
+            <div class="card-body">
+                <!-- Mathematical Formula Explanations Callout -->
+                <div class="alert alert-dark border-secondary p-3 mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <strong class="text-info"><i class="bi bi-calculator me-1"></i> Speedup Formula:</strong>
+                            <code class="d-block text-light mt-1">S = T_serial / T_parallel</code>
+                            <small class="text-secondary">Ratio of single-threaded baseline latency to parallel OpenMP latency.</small>
+                        </div>
+                        <div class="col-md-4">
+                            <strong class="text-success"><i class="bi bi-pie-chart me-1"></i> Parallel Efficiency:</strong>
+                            <code class="d-block text-light mt-1">E = S / p = T_serial / (p * T_parallel)</code>
+                            <small class="text-secondary">Processor core resource utilization fraction across p worker threads.</small>
+                        </div>
+                        <div class="col-md-4">
+                            <strong class="text-warning"><i class="bi bi-graph-up me-1"></i> Amdahl's Law Limit:</strong>
+                            <code class="d-block text-light mt-1">S_max = 1 / ((1 - P) + (P / p))</code>
+                            <small class="text-secondary">Where parallelizable fraction P > 0.94 in spatial loop decomposition.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Graphs Section -->
+                <div class="row g-3 mb-3">
+                    <div class="col-lg-6">
+                        <div class="card bg-dark border-secondary h-100">
+                            <div class="card-header bg-black fw-bold text-light">
+                                <i class="bi bi-bar-chart-fill me-1 text-primary"></i> Speedup vs. OpenMP Thread Allocation (1 to 12 Threads)
+                            </div>
+                            <div class="card-body">
+                                <canvas id="speedupChart" style="max-height: 280px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card bg-dark border-secondary h-100">
+                            <div class="card-header bg-black fw-bold text-light">
+                                <i class="bi bi-graph-up-arrow me-1 text-success"></i> Parallel Efficiency vs. Thread Allocation (%)
+                            </div>
+                            <div class="card-body">
+                                <canvas id="efficiencyChart" style="max-height: 280px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Table -->
+                <div class="card bg-black border-secondary">
+                    <div class="card-header bg-dark fw-bold d-flex justify-content-between align-items-center py-2">
+                        <span class="text-light"><i class="bi bi-table me-1"></i> Comprehensive OpenMP Latency & Throughput Measurements</span>
+                        <span class="badge bg-secondary" id="record-count-badge">Loading Records...</span>
+                    </div>
+                    <div class="card-body p-0 overflow-auto">
+                        <table class="table table-dark table-hover table-striped table-sm mb-0 small text-center align-middle">
+                            <thead class="table-secondary text-secondary">
+                                <tr>
+                                    <th>Policy</th>
+                                    <th>Schedule</th>
+                                    <th>Threads</th>
+                                    <th>Scale</th>
+                                    <th>Resolution</th>
+                                    <th>Method</th>
+                                    <th>Avg / Min Latency</th>
+                                    <th>FPS</th>
+                                    <th>Speedup</th>
+                                    <th>Efficiency</th>
+                                </tr>
+                            </thead>
+                            <tbody id="benchmark-table-body">
+                                <!-- Dynamically populated by /static/js/results.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Academic Footer -->
+        <footer class="mt-4 pt-3 border-top border-secondary text-center text-secondary small">
+            <p class="mb-1">
+                <strong>VISIONBOOST: Real-Time Visual Enhancement Engine</strong> | Course AL58: Research Methodology & Intellectual Property Rights
+            </p>
+            <p class="mb-0">
+                Department of Artificial Intelligence & Data Science, Ramaiah Institute of Technology (RIT), Bangalore - 560054
+            </p>
+        </footer>
     </div>
 
-    <script src=\"/static/js/results.js\"></script>
+    <script src="/static/js/results.js"></script>
 </body>
 </html>

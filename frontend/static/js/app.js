@@ -234,7 +234,12 @@ function updateControls() {
     const targetFps = document.getElementById('ctrl-target-fps').value;
     const adaptive = document.getElementById('ctrl-adaptive').checked;
     const enhEl = document.getElementById('ctrl-enhancement');
-    const enhancement = enhEl ? parseFloat(enhEl.value) : 0.8;
+    const enhancement = enhEl ? parseFloat(enhEl.value) : 3.5;
+
+    const bEl = document.getElementById('ctrl-brightness');
+    const cEl = document.getElementById('ctrl-contrast');
+    const llEl = document.getElementById('ctrl-lowlight');
+    const dnEl = document.getElementById('ctrl-denoise');
 
     fetch('/api/control', {
         method: 'POST',
@@ -246,9 +251,50 @@ function updateControls() {
             target_fps: targetFps,
             adaptive: adaptive,
             enhancement: enhancement,
-            show_heatmap: isHeatmapActive
+            show_heatmap: isHeatmapActive,
+            brightness: bEl ? parseInt(bEl.value) : 0,
+            contrast: cEl ? parseFloat(cEl.value) : 1.0,
+            low_light_boost: llEl ? llEl.checked : false,
+            denoise: dnEl ? dnEl.checked : false
         })
     }).catch(err => console.error(err));
+}
+
+function updateLightingControls() {
+    const bEl = document.getElementById('ctrl-brightness');
+    const cEl = document.getElementById('ctrl-contrast');
+    const llEl = document.getElementById('ctrl-lowlight');
+    const dnEl = document.getElementById('ctrl-denoise');
+
+    const brightness = bEl ? parseInt(bEl.value) : 0;
+    const contrast = cEl ? parseFloat(cEl.value) : 1.0;
+    const lowlight = llEl ? llEl.checked : false;
+    const denoise = dnEl ? dnEl.checked : false;
+
+    const bValEl = document.getElementById('val-brightness');
+    if (bValEl) bValEl.innerText = (brightness > 0 ? '+' : '') + brightness;
+
+    const cValEl = document.getElementById('val-contrast');
+    if (cValEl) cValEl.innerText = contrast.toFixed(1) + 'x';
+
+    fetch('/api/control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            brightness: brightness,
+            contrast: contrast,
+            low_light_boost: lowlight,
+            denoise: denoise
+        })
+    }).catch(err => console.error(err));
+}
+
+function resetLightingControls() {
+    if (document.getElementById('ctrl-brightness')) document.getElementById('ctrl-brightness').value = 0;
+    if (document.getElementById('ctrl-contrast')) document.getElementById('ctrl-contrast').value = 1.0;
+    if (document.getElementById('ctrl-lowlight')) document.getElementById('ctrl-lowlight').checked = false;
+    if (document.getElementById('ctrl-denoise')) document.getElementById('ctrl-denoise').checked = false;
+    updateLightingControls();
 }
 
 function toggleHeatmap() {

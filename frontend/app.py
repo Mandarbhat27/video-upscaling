@@ -80,8 +80,13 @@ def update_control():
         threads=data.get('threads'),
         target_fps=data.get('target_fps'),
         adaptive=data.get('adaptive'),
-        workload=data.get('workload'), show_heatmap=data.get('show_heatmap'),
-        enhancement=data.get('enhancement')
+        workload=data.get('workload'),
+        show_heatmap=data.get('show_heatmap'),
+        enhancement=data.get('enhancement'),
+        brightness=data.get('brightness'),
+        contrast=data.get('contrast'),
+        low_light_boost=data.get('low_light_boost'),
+        denoise=data.get('denoise')
     )
     return jsonify({'status': 'ok'})
 
@@ -305,6 +310,23 @@ def upscale_photo():
         chunk_size=16,
         enhancement=enhancement
     )
+
+    # Apply lighting & sensor adjustments (Section 1.4 Objectives)
+    brightness = int(request.form.get('brightness', 0))
+    contrast = float(request.form.get('contrast', 1.0))
+    low_light_boost = request.form.get('low_light_boost') in ['true', 'True', '1', True]
+    denoise = request.form.get('denoise') in ['true', 'True', '1', True]
+
+    if brightness != 0 or abs(contrast - 1.0) > 0.05:
+        upscaled = cv2.convertScaleAbs(upscaled, alpha=contrast, beta=brightness)
+    if low_light_boost:
+        clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
+        ycrcb = cv2.cvtColor(upscaled, cv2.COLOR_BGR2YCrCb)
+        y, cr, cb = cv2.split(ycrcb)
+        y = clahe.apply(y)
+        upscaled = cv2.cvtColor(cv2.merge([y, cr, cb]), cv2.COLOR_YCrCb2BGR)
+    if denoise:
+        upscaled = cv2.GaussianBlur(upscaled, (3, 3), 0.75)
 
     dst_h, dst_w = upscaled.shape[:2]
     dst_pixels = dst_w * dst_h
