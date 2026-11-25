@@ -68,7 +68,21 @@ def start_camera():
 @app.route('/api/camera/stop', methods=['POST'])
 def stop_camera():
     webcam_worker.stop()
-    return jsonify({'status': 'ok'})
+    has_rec = getattr(webcam_worker, 'has_recorded_video', False)
+    frames = getattr(webcam_worker, 'recorded_frames_count', 0)
+    return jsonify({
+        'status': 'ok',
+        'has_recorded_video': has_rec,
+        'recorded_frames': frames,
+        'download_url': '/api/download_live_recording' if has_rec else None
+    })
+
+@app.route('/api/download_live_recording')
+def download_live_recording():
+    path = getattr(webcam_worker, 'recorded_video_path', None)
+    if path and os.path.exists(path) and os.path.getsize(path) > 1024:
+        return send_file(path, as_attachment=True, download_name='visionboost_live_enhanced.mp4', mimetype='video/mp4')
+    return jsonify({'error': 'No recorded live session available'}), 404
 
 @app.route('/api/control', methods=['POST'])
 def update_control():

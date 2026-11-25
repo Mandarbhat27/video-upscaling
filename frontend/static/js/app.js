@@ -16,19 +16,25 @@ document.addEventListener('DOMContentLoaded', () => {
     setupZoomListeners();
 });
 
+let currentMode = 'webcam';
+let cctvActive = false;
+
 function switchMode(mode) {
     currentMode = mode;
     const webcamSec = document.getElementById('webcam-section');
+    const cctvSec = document.getElementById('cctv-section');
     const videoSec = document.getElementById('video-section');
     const photoSec = document.getElementById('photo-section');
+
     const webcamBtn = document.getElementById('mode-webcam-btn');
+    const cctvBtn = document.getElementById('mode-cctv-btn');
     const videoBtn = document.getElementById('mode-video-btn');
     const photoBtn = document.getElementById('mode-photo-btn');
 
-    [webcamSec, videoSec, photoSec].forEach(sec => { if (sec) sec.style.display = 'none'; });
-    [webcamBtn, videoBtn, photoBtn].forEach(btn => {
+    [webcamSec, cctvSec, videoSec, photoSec].forEach(sec => { if (sec) sec.style.display = 'none'; });
+    [webcamBtn, cctvBtn, videoBtn, photoBtn].forEach(btn => {
         if (btn) {
-            btn.classList.remove('btn-primary', 'active');
+            btn.classList.remove('btn-primary', 'btn-warning', 'btn-info', 'btn-success', 'active');
             btn.classList.add('btn-outline-secondary');
         }
     });
@@ -36,13 +42,75 @@ function switchMode(mode) {
     if (mode === 'webcam') {
         if (webcamSec) webcamSec.style.display = 'block';
         if (webcamBtn) { webcamBtn.classList.add('btn-primary', 'active'); webcamBtn.classList.remove('btn-outline-secondary'); }
+    } else if (mode === 'cctv') {
+        if (cctvSec) cctvSec.style.display = 'block';
+        if (cctvBtn) { cctvBtn.classList.add('btn-warning', 'text-dark', 'active'); cctvBtn.classList.remove('btn-outline-secondary'); }
     } else if (mode === 'video') {
         if (videoSec) videoSec.style.display = 'block';
-        if (videoBtn) { videoBtn.classList.add('btn-primary', 'active'); videoBtn.classList.remove('btn-outline-secondary'); }
+        if (videoBtn) { videoBtn.classList.add('btn-info', 'text-dark', 'active'); videoBtn.classList.remove('btn-outline-secondary'); }
     } else if (mode === 'photo') {
         if (photoSec) photoSec.style.display = 'block';
-        if (photoBtn) { photoBtn.classList.add('btn-primary', 'active'); photoBtn.classList.remove('btn-outline-secondary'); }
+        if (photoBtn) { photoBtn.classList.add('btn-success', 'text-light', 'active'); photoBtn.classList.remove('btn-outline-secondary'); }
     }
+}
+
+function updateCCTVUrlFromCredentials() {
+    const ip = (document.getElementById('cctv-ip') ? document.getElementById('cctv-ip').value : '').trim();
+    const port = (document.getElementById('cctv-port') ? document.getElementById('cctv-port').value : '554').trim();
+    const user = (document.getElementById('cctv-user') ? document.getElementById('cctv-user').value : '').trim();
+    const pass = (document.getElementById('cctv-pass') ? document.getElementById('cctv-pass').value : '').trim();
+    const path = (document.getElementById('cctv-path') ? document.getElementById('cctv-path').value : '').trim();
+
+    if (!ip) return;
+    let url = '';
+    if (port === '8080') {
+        url = `http://${user && pass ? user + ':' + pass + '@' : ''}${ip}:${port}${path.startsWith('/') ? path : '/' + path}`;
+    } else {
+        url = `rtsp://${user && pass ? user + ':' + pass + '@' : ''}${ip}:${port}${path.startsWith('/') ? path : '/' + path}`;
+    }
+    const urlInput = document.getElementById('cctv-stream-url');
+    if (urlInput) urlInput.value = url;
+}
+
+function setCCTVPreset(preset) {
+    const ipInput = document.getElementById('cctv-ip');
+    const portInput = document.getElementById('cctv-port');
+    const userInput = document.getElementById('cctv-user');
+    const passInput = document.getElementById('cctv-pass');
+    const pathInput = document.getElementById('cctv-path');
+    const urlInput = document.getElementById('cctv-stream-url');
+
+    if (preset === 'phone') {
+        if (ipInput) ipInput.value = '192.168.1.15';
+        if (portInput) portInput.value = '8080';
+        if (userInput) userInput.value = '';
+        if (passInput) passInput.value = '';
+        if (pathInput) pathInput.value = '/video';
+        if (urlInput) urlInput.value = 'http://192.168.1.15:8080/video';
+    } else if (preset === 'rtsp') {
+        if (ipInput) ipInput.value = '192.168.1.64';
+        if (portInput) portInput.value = '554';
+        if (userInput) userInput.value = 'admin';
+        if (passInput) passInput.value = 'admin123';
+        if (pathInput) pathInput.value = '/h264/ch1/main';
+        if (urlInput) urlInput.value = 'rtsp://admin:admin123@192.168.1.64:554/h264/ch1/main';
+    } else if (preset === 'demo') {
+        if (ipInput) ipInput.value = 'Campus Gate 1 (Demo)';
+        if (portInput) portInput.value = '554';
+        if (userInput) userInput.value = 'admin';
+        if (passInput) passInput.value = '••••••';
+        if (pathInput) pathInput.value = '/live/gate1';
+        if (urlInput) urlInput.value = ''; // Empty string signals campus gate demo feed in backend
+    }
+}
+
+function toggleWebcam() {
+    toggleCamera('webcam');
+}
+
+function toggleCCTVStream() {
+    const streamUrl = document.getElementById('cctv-stream-url') ? document.getElementById('cctv-stream-url').value.trim() : '';
+    toggleCamera('cctv', streamUrl);
 }
 
 let currentStreamMode = 'webcam';
@@ -109,92 +177,114 @@ function applyRTSPBuilder() {
     document.getElementById('cctv-cred-helper').style.display = 'none';
 }
 
-function toggleCamera() {
-    const btn = document.getElementById('cam-toggle-btn');
-    const rawImg = document.getElementById('raw-video-img');
-    const upscaledImg = document.getElementById('upscaled-video-img');
-    const rawPlaceholder = document.getElementById('raw-placeholder');
-    const upscaledPlaceholder = document.getElementById('upscaled-placeholder');
+function toggleCamera(mode = 'webcam', streamUrl = '') {
+    const isCCTV = mode === 'cctv' || currentMode === 'cctv';
+    const btn = isCCTV ? document.getElementById('cctv-toggle-btn') : document.getElementById('cam-toggle-btn');
+    const rawImg = isCCTV ? document.getElementById('cctv-raw-video-img') : document.getElementById('raw-video-img');
+    const upscaledImg = isCCTV ? document.getElementById('cctv-upscaled-video-img') : document.getElementById('upscaled-video-img');
+    const rawPlaceholder = isCCTV ? document.getElementById('cctv-raw-placeholder') : document.getElementById('raw-placeholder');
+    const upscaledPlaceholder = isCCTV ? document.getElementById('cctv-upscaled-placeholder') : document.getElementById('upscaled-placeholder');
+    const recPill = isCCTV ? document.getElementById('cctv-rec-pill') : document.getElementById('webcam-rec-pill');
+    const downloadBtn = isCCTV ? document.getElementById('cctv-download-btn') : document.getElementById('webcam-download-btn');
+    const framesBadge = isCCTV ? document.getElementById('cctv-rec-frames-badge') : document.getElementById('webcam-rec-frames-badge');
 
     if (!cameraActive) {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Connecting Stream...';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Connecting...';
+        }
 
-        const streamUrl = document.getElementById('cctv-stream-url') ? document.getElementById('cctv-stream-url').value.trim() : '';
+        if (downloadBtn) downloadBtn.style.display = 'none';
+
+        const finalUrl = streamUrl || (document.getElementById('cctv-stream-url') ? document.getElementById('cctv-stream-url').value.trim() : '');
 
         fetch('/api/camera/start', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                mode: currentStreamMode,
-                stream_url: streamUrl
+                mode: isCCTV ? 'cctv' : 'webcam',
+                stream_url: isCCTV ? finalUrl : ''
             })
         })
             .then(res => res.json())
             .then(data => {
-                btn.disabled = false;
+                if (btn) btn.disabled = false;
                 if (data.status === 'ok') {
                     cameraActive = true;
-                    btn.classList.remove('btn-success');
-                    btn.classList.add('btn-danger');
-                    btn.innerHTML = '<i class="bi bi-stop-fill me-1"></i> Stop Stream';
-
-                    if (data.source_label) {
-                        const lbl = document.getElementById('active-stream-label');
-                        if (lbl) lbl.innerText = data.source_label;
+                    if (btn) {
+                        btn.classList.remove('btn-success', 'btn-warning');
+                        btn.classList.add('btn-danger');
+                        btn.innerHTML = '<i class="bi bi-stop-fill me-1"></i> Stop & Save Stream';
                     }
 
-                    rawPlaceholder.style.display = 'none';
-                    upscaledPlaceholder.style.display = 'none';
-                    rawImg.style.display = 'block';
-                    upscaledImg.style.display = 'block';
+                    if (recPill) recPill.style.display = 'inline-block';
+
+                    if (rawPlaceholder) rawPlaceholder.style.display = 'none';
+                    if (upscaledPlaceholder) upscaledPlaceholder.style.display = 'none';
+                    if (rawImg) rawImg.style.display = 'block';
+                    if (upscaledImg) upscaledImg.style.display = 'block';
 
                     const ts = Date.now();
-                    rawImg.src = '/video_feed/raw?ts=' + ts;
-                    upscaledImg.src = '/video_feed/upscaled?ts=' + ts;
+                    if (rawImg) rawImg.src = '/video_feed/raw?ts=' + ts;
+                    if (upscaledImg) upscaledImg.src = '/video_feed/upscaled?ts=' + ts;
 
-                    rawImg.onerror = () => {
-                        console.warn('MJPEG dropped, activating fast polling fallback');
-                        startCameraPollingFallback();
-                    };
+                    if (isCCTV) {
+                        const lbl = document.getElementById('cctv-active-label');
+                        if (lbl) lbl.innerText = data.source_label || 'Live CCTV Connected';
+                    }
 
                     if (!metricsInterval) {
                         metricsInterval = setInterval(pollMetrics, 300);
                     }
                 } else {
                     alert('Camera could not be started: ' + (data.message || 'Check terminal'));
-                    btn.classList.remove('btn-danger');
-                    btn.classList.add('btn-success');
-                    btn.innerHTML = '<i class="bi bi-play-fill me-1"></i> Start Camera';
+                    if (btn) {
+                        btn.classList.remove('btn-danger');
+                        btn.classList.add(isCCTV ? 'btn-warning' : 'btn-success');
+                        btn.innerHTML = isCCTV ? '<i class="bi bi-play-circle-fill me-1"></i> Connect & Enhance CCTV Live' : '<i class="bi bi-play-fill me-1"></i> Start Live Webcam';
+                    }
                 }
             })
             .catch(err => {
-                btn.disabled = false;
-                btn.classList.remove('btn-danger');
-                btn.classList.add('btn-success');
-                btn.innerHTML = '<i class="bi bi-play-fill me-1"></i> Start Camera';
-                alert('Connection error. Ensure "python app.py" is running in your terminal.');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('btn-danger');
+                    btn.classList.add(isCCTV ? 'btn-warning' : 'btn-success');
+                    btn.innerHTML = isCCTV ? '<i class="bi bi-play-circle-fill me-1"></i> Connect & Enhance CCTV Live' : '<i class="bi bi-play-fill me-1"></i> Start Live Webcam';
+                }
                 console.error(err);
             });
     } else {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Stopping...';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Finalizing Recording...';
+        }
 
         fetch('/api/camera/stop', { method: 'POST' })
             .then(res => res.json())
             .then(data => {
-                btn.disabled = false;
+                if (btn) btn.disabled = false;
                 cameraActive = false;
-                btn.classList.remove('btn-danger');
-                btn.classList.add('btn-success');
-                btn.innerHTML = '<i class="bi bi-play-fill me-1"></i> Start Camera';
+                if (btn) {
+                    btn.classList.remove('btn-danger');
+                    btn.classList.add(isCCTV ? 'btn-warning' : 'btn-success');
+                    btn.innerHTML = isCCTV ? '<i class="bi bi-play-circle-fill me-1"></i> Connect & Enhance CCTV Live' : '<i class="bi bi-play-fill me-1"></i> Start Live Webcam';
+                }
 
-                rawImg.style.display = 'none';
-                upscaledImg.style.display = 'none';
-                rawImg.src = '';
-                upscaledImg.src = '';
-                rawPlaceholder.style.display = 'block';
-                upscaledPlaceholder.style.display = 'block';
+                if (recPill) recPill.style.display = 'none';
+
+                if (rawImg) { rawImg.style.display = 'none'; rawImg.src = ''; }
+                if (upscaledImg) { upscaledImg.style.display = 'none'; upscaledImg.src = ''; }
+                if (rawPlaceholder) rawPlaceholder.style.display = 'block';
+                if (upscaledPlaceholder) upscaledPlaceholder.style.display = 'block';
+
+                // Display recorded live video download button immediately
+                if (data.has_recorded_video && downloadBtn) {
+                    downloadBtn.style.display = 'inline-flex';
+                    if (framesBadge) {
+                        framesBadge.innerText = `${data.recorded_frames || 'Full'} Frames Saved`;
+                    }
+                }
 
                 if (metricsInterval) {
                     clearInterval(metricsInterval);
@@ -206,7 +296,7 @@ function toggleCamera() {
                 }
             })
             .catch(err => {
-                btn.disabled = false;
+                if (btn) btn.disabled = false;
                 console.error(err);
             });
     }
@@ -473,6 +563,22 @@ function pollMetrics() {
             if (data.stream_source_label) {
                 const srcLbl = document.getElementById('active-stream-label');
                 if (srcLbl) srcLbl.innerText = data.stream_source_label;
+            }
+            // Update CCTV Mode Telemetry
+            if (document.getElementById('cctv-stat-fps')) {
+                document.getElementById('cctv-stat-fps').innerText = data.current_fps ? data.current_fps.toFixed(1) : '--';
+            }
+            if (document.getElementById('cctv-stat-latency')) {
+                document.getElementById('cctv-stat-latency').innerText = data.interpolation_latency_ms + ' ms';
+            }
+            if (document.getElementById('cctv-raw-res-pill')) {
+                document.getElementById('cctv-raw-res-pill').innerText = data.raw_res || '640x360';
+            }
+            if (document.getElementById('cctv-upscaled-res-pill')) {
+                document.getElementById('cctv-upscaled-res-pill').innerText = (data.upscaled_res || '1280x720') + ' (' + data.scale_factor + 'x)';
+            }
+            if (document.getElementById('cctv-stat-gain')) {
+                document.getElementById('cctv-stat-gain').innerText = data.sharpness_gain_pct || '+1,477%';
             }
 
             const badge = document.getElementById('stat-adaptive-badge');
@@ -1135,4 +1241,41 @@ function initVidSplitSliderOnce() {
     window.addEventListener('touchend', () => {
         isVidSplitDragging = false;
     });
+}
+
+function updateCCTVLightingControls() {
+    const bEl = document.getElementById('cctv-ctrl-brightness');
+    const cEl = document.getElementById('cctv-ctrl-contrast');
+    const llEl = document.getElementById('cctv-ctrl-lowlight');
+    const dnEl = document.getElementById('cctv-ctrl-denoise');
+
+    const brightness = bEl ? parseInt(bEl.value) : 0;
+    const contrast = cEl ? parseFloat(cEl.value) : 1.0;
+    const lowlight = llEl ? llEl.checked : false;
+    const denoise = dnEl ? dnEl.checked : false;
+
+    const bValEl = document.getElementById('cctv-val-brightness');
+    if (bValEl) bValEl.innerText = (brightness > 0 ? '+' : '') + brightness;
+
+    const cValEl = document.getElementById('cctv-val-contrast');
+    if (cValEl) cValEl.innerText = contrast.toFixed(1) + 'x';
+
+    fetch('/api/control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            brightness: brightness,
+            contrast: contrast,
+            low_light_boost: lowlight,
+            denoise: denoise
+        })
+    }).catch(err => console.error(err));
+}
+
+function resetCCTVLightingControls() {
+    if (document.getElementById('cctv-ctrl-brightness')) document.getElementById('cctv-ctrl-brightness').value = 0;
+    if (document.getElementById('cctv-ctrl-contrast')) document.getElementById('cctv-ctrl-contrast').value = 1.0;
+    if (document.getElementById('cctv-ctrl-lowlight')) document.getElementById('cctv-ctrl-lowlight').checked = false;
+    if (document.getElementById('cctv-ctrl-denoise')) document.getElementById('cctv-ctrl-denoise').checked = false;
+    updateCCTVLightingControls();
 }

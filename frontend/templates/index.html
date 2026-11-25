@@ -37,77 +37,46 @@
                 <span class="text-info fw-semibold">Team:</span> Mandar Bhat (1MS24AD038), M R Abhishek (1MS24AD036), Surajit Mondal (1MS24AD060)</p>
             </div>
             <div class="col-md-6 d-flex justify-content-end gap-2">
-                <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-primary active" id="mode-webcam-btn" onclick="switchMode('webcam')">
-                        <i class="bi bi-camera-video me-1"></i> Live Webcam Mode
+                <div class="btn-group shadow" role="group">
+                    <button type="button" class="btn btn-primary active px-3" id="mode-webcam-btn" onclick="switchMode('webcam')">
+                        <i class="bi bi-webcam-fill me-1"></i> Live Webcam
                     </button>
-                    <button type="button" class="btn btn-outline-secondary text-light" id="mode-video-btn" onclick="switchMode('video')">
-                        <i class="bi bi-file-earmark-play me-1"></i> Uploaded Video Mode
+                    <button type="button" class="btn btn-outline-warning text-light px-3" id="mode-cctv-btn" onclick="switchMode('cctv')">
+                        <i class="bi bi-camera-video-fill me-1"></i> Live CCTV / IP Stream
                     </button>
-                    <button type="button" class="btn btn-outline-secondary text-light" id="mode-photo-btn" onclick="switchMode('photo')">
-                        <i class="bi bi-camera me-1"></i> Photo / Interview Snapshot Mode
+                    <button type="button" class="btn btn-outline-info text-light px-3" id="mode-video-btn" onclick="switchMode('video')">
+                        <i class="bi bi-file-earmark-play-fill me-1"></i> Upload Video
                     </button>
-                </div>
+                    <button type="button" class="btn btn-outline-success text-light px-3" id="mode-photo-btn" onclick="switchMode('photo')">
+                        <i class="bi bi-image-fill me-1"></i> Enhance Photo
+                    </button>
+                </div></div>
             </div>
         </div>
 
         <!-- WEBCAM / LIVE CCTV MODE CONTAINER -->
         <div id="webcam-section">
-            <!-- Source Selector Strip -->
-            <div class="card bg-black border-secondary border-opacity-50 mb-2 p-2 shadow-sm">
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                    <div class="d-flex flex-wrap align-items-center gap-2">
-                        <span class="small fw-bold text-light"><i class="bi bi-broadcast text-danger me-1"></i> Live Stream Input:</span>
-                        <div class="btn-group btn-group-sm" role="group">
-                            <input type="radio" class="btn-check" name="stream-source-opt" id="src-webcam" value="webcam" checked onchange="onStreamSourceChange('webcam')">
-                            <label class="btn btn-outline-info btn-sm px-3" for="src-webcam"><i class="bi bi-webcam me-1"></i> USB Webcam</label>
-
-                            <input type="radio" class="btn-check" name="stream-source-opt" id="src-cctv-url" value="cctv_url" onchange="onStreamSourceChange('cctv_url')">
-                            <label class="btn btn-outline-warning btn-sm px-3" for="src-cctv-url"><i class="bi bi-camera-video me-1"></i> Live IP / CCTV Stream (RTSP / Phone)</label>
-
-                            <input type="radio" class="btn-check" name="stream-source-opt" id="src-cctv-campus" value="cctv_campus" onchange="onStreamSourceChange('cctv_campus')">
-                            <label class="btn btn-outline-success btn-sm px-3" for="src-cctv-campus"><i class="bi bi-building me-1"></i> Campus Gate CCTV (24/7 Demo)</label>
-                        </div>
-                    </div>
-                    <div>
-                        <span class="badge bg-dark border border-secondary text-info px-2 py-1" id="active-stream-badge">
-                            <i class="bi bi-record-circle text-danger me-1"></i> <span id="active-stream-label">Local USB Webcam</span>
+            <!-- Clean Live Webcam Action Strip -->
+            <div class="card bg-black border-secondary mb-3 shadow-sm">
+                <div class="card-body py-2 px-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fw-bold text-light"><i class="bi bi-webcam text-info me-1"></i> Live USB Webcam Enhancement</span>
+                        <span class="badge bg-dark border border-secondary text-secondary">Zero-Latency C++ OpenMP</span>
+                        <span id="webcam-rec-pill" class="badge bg-danger text-light" style="display: none;">
+                            <i class="bi bi-record-circle-fill me-1"></i> RECORDING ENHANCED STREAM
                         </span>
                     </div>
-                </div>
-            </div>
-
-            <!-- CCTV / IP Camera Stream Configuration Panel (Collapsible) -->
-            <div id="cctv-config-box" class="card bg-dark border-warning border-opacity-50 mb-2 p-3 shadow-sm" style="display: none;">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="small fw-bold text-warning"><i class="bi bi-hdd-network me-1"></i> Connect Live IP / CCTV Stream (RTSP / HTTP)</span>
-                    <span class="badge bg-black text-secondary border border-secondary">Works with Phone "IP Webcam" App, Hikvision, Dahua, CP Plus</span>
-                </div>
-                <div class="row g-2 align-items-center">
-                    <div class="col-md-7">
-                        <label class="small text-secondary">Stream URL (RTSP or HTTP)</label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-black text-warning border-secondary"><i class="bi bi-link-45deg"></i></span>
-                            <input type="text" class="form-control bg-black text-light border-secondary" id="cctv-stream-url" placeholder="http://192.168.1.15:8080/video or rtsp://user:pass@ip:554/stream">
-                        </div>
-                    </div>
-                    <div class="col-md-5 d-flex gap-2 align-items-end">
-                        <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" onclick="setCCTVPreset('phone')"><i class="bi bi-phone me-1"></i> Phone IP Webcam Preset</button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" onclick="toggleCredentialsHelper()"><i class="bi bi-key me-1"></i> RTSP Builder</button>
-                    </div>
-                </div>
-                <!-- Credentials Helper -->
-                <div id="cctv-cred-helper" class="mt-2 pt-2 border-top border-secondary border-opacity-25" style="display: none;">
-                    <div class="row g-2">
-                        <div class="col-3"><input type="text" class="form-control form-control-sm bg-black text-light border-secondary" id="rtsp-ip" placeholder="IP Address (e.g. 192.168.1.100)"></div>
-                        <div class="col-2"><input type="number" class="form-control form-control-sm bg-black text-light border-secondary" id="rtsp-port" placeholder="Port (554)" value="554"></div>
-                        <div class="col-2"><input type="text" class="form-control form-control-sm bg-black text-light border-secondary" id="rtsp-user" placeholder="Username (admin)"></div>
-                        <div class="col-3"><input type="password" class="form-control form-control-sm bg-black text-light border-secondary" id="rtsp-pass" placeholder="Password"></div>
-                        <div class="col-2"><button type="button" class="btn btn-warning btn-sm w-100" onclick="applyRTSPBuilder()">Build URL</button></div>
+                    <div class="d-flex align-items-center gap-2">
+                        <a id="webcam-download-btn" href="/api/download_live_recording" download="webcam_enhanced_stream.mp4" class="btn btn-success btn-sm px-3 shadow" style="display: none;">
+                            <i class="bi bi-download me-1"></i> Download Enhanced Video (.mp4)
+                            <span class="badge bg-light text-dark ms-1" id="webcam-rec-frames-badge">Saved</span>
+                        </a>
+                        <button id="cam-toggle-btn" class="btn btn-success btn-sm px-3 fw-semibold" onclick="toggleWebcam()">
+                            <i class="bi bi-play-fill me-1"></i> Start Live Webcam
+                        </button>
                     </div>
                 </div>
             </div>
-
             <!-- Controls Toolbar -->
             <div class="card bg-black border-secondary mb-3 shadow-sm">
                 <div class="card-body py-2 px-3">
@@ -442,6 +411,201 @@
                 </div>
             </div>
         </div> <!-- End Webcam Section -->
+
+        <!-- LIVE CCTV & SURVEILLANCE IP CAMERA MODE CONTAINER -->
+        <div id="cctv-section" style="display: none;">
+            <!-- Dedicated CCTV Credentials & Stream Connection Box -->
+            <div class="card bg-black border-warning border-opacity-75 mb-3 shadow">
+                <div class="card-header bg-dark d-flex justify-content-between align-items-center py-2">
+                    <span class="fw-bold text-warning">
+                        <i class="bi bi-shield-lock-fill me-1"></i> Live CCTV & IP Camera Credentials & Stream Configuration
+                    </span>
+                    <span class="badge bg-warning text-dark fw-bold">RTSP / HTTP / Security Camera</span>
+                </div>
+                <div class="card-body p-3">
+                    <!-- Credentials Inputs -->
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-3">
+                            <label class="small text-secondary mb-1">Camera IP / Host</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-dark text-warning border-secondary"><i class="bi bi-router"></i></span>
+                                <input type="text" class="form-control bg-dark text-light border-secondary" id="cctv-ip" placeholder="192.168.1.100" value="192.168.1.64" oninput="updateCCTVUrlFromCredentials()">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small text-secondary mb-1">RTSP / HTTP Port</label>
+                            <input type="number" class="form-control form-control-sm bg-dark text-light border-secondary" id="cctv-port" placeholder="554" value="554" oninput="updateCCTVUrlFromCredentials()">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small text-secondary mb-1">Username</label>
+                            <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" id="cctv-user" placeholder="admin" value="admin" oninput="updateCCTVUrlFromCredentials()">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small text-secondary mb-1">Password</label>
+                            <input type="password" class="form-control form-control-sm bg-dark text-light border-secondary" id="cctv-pass" placeholder="Password" value="admin123" oninput="updateCCTVUrlFromCredentials()">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="small text-secondary mb-1">Channel / Path</label>
+                            <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" id="cctv-path" placeholder="/h264/ch1/main" value="/h264/ch1/main" oninput="updateCCTVUrlFromCredentials()">
+                        </div>
+                    </div>
+
+                    <!-- Stream URL & 1-Click Presets -->
+                    <div class="row g-2 align-items-center mb-3">
+                        <div class="col-md-7">
+                            <label class="small text-secondary mb-1">Live Stream URL (Auto-Generated from Credentials or Edit Directly)</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-dark text-warning border-secondary"><i class="bi bi-link-45deg"></i></span>
+                                <input type="text" class="form-control bg-dark text-warning border-secondary fw-semibold" id="cctv-stream-url" placeholder="rtsp://admin:admin123@192.168.1.64:554/h264/ch1/main">
+                            </div>
+                        </div>
+                        <div class="col-md-5 d-flex gap-2 align-items-end pt-3">
+                            <button type="button" class="btn btn-outline-info btn-sm flex-fill" onclick="setCCTVPreset('phone')">
+                                <i class="bi bi-phone me-1"></i> Phone "IP Webcam"
+                            </button>
+                            <button type="button" class="btn btn-outline-warning btn-sm flex-fill" onclick="setCCTVPreset('rtsp')">
+                                <i class="bi bi-camera-video me-1"></i> RTSP Camera
+                            </button>
+                            <button type="button" class="btn btn-outline-success btn-sm flex-fill" onclick="setCCTVPreset('demo')">
+                                <i class="bi bi-building me-1"></i> Campus Gate Demo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Connect Action Button & Recording Download Bar -->
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 border-top border-secondary border-opacity-50">
+                        <div class="d-flex align-items-center gap-2">
+                            <button id="cctv-toggle-btn" class="btn btn-warning btn-sm px-4 fw-bold" onclick="toggleCCTVStream()">
+                                <i class="bi bi-play-circle-fill me-1"></i> Connect & Enhance CCTV Live
+                            </button>
+                            <span id="cctv-rec-pill" class="badge bg-danger text-light" style="display: none;">
+                                <i class="bi bi-record-circle-fill me-1"></i> RECORDING ENHANCED CCTV STREAM
+                            </span>
+                            <span class="badge bg-dark border border-secondary text-info px-2 py-1" id="cctv-active-badge">
+                                <i class="bi bi-broadcast text-warning me-1"></i> <span id="cctv-active-label">Ready to connect</span>
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <a id="cctv-download-btn" href="/api/download_live_recording" download="cctv_enhanced_recording.mp4" class="btn btn-success btn-sm px-3 shadow" style="display: none;">
+                                <i class="bi bi-download me-1"></i> Download Enhanced CCTV Recording (.mp4)
+                                <span class="badge bg-light text-dark ms-1" id="cctv-rec-frames-badge">Saved</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CCTV Lighting & Night Vision Enhancements (Section 1.4) -->
+            <div class="card bg-black border-secondary border-opacity-50 mb-3 shadow-sm">
+                <div class="card-body py-2 px-3">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-auto">
+                            <span class="small fw-bold text-warning"><i class="bi bi-moon-stars me-1"></i> Surveillance Optics & CLAHE (Sec 1.4):</span>
+                        </div>
+                        <div class="col-auto">
+                            <label class="small text-secondary d-flex justify-content-between">
+                                <span>Brightness</span>
+                                <span class="text-light fw-bold ms-2" id="cctv-val-brightness">0</span>
+                            </label>
+                            <input type="range" class="form-range form-range-sm" id="cctv-ctrl-brightness" min="-50" max="50" value="0" style="width: 120px;" oninput="updateCCTVLightingControls()">
+                        </div>
+                        <div class="col-auto border-start border-secondary ps-3">
+                            <label class="small text-secondary d-flex justify-content-between">
+                                <span>Contrast (Gamma)</span>
+                                <span class="text-light fw-bold ms-2" id="cctv-val-contrast">1.0x</span>
+                            </label>
+                            <input type="range" class="form-range form-range-sm" id="cctv-ctrl-contrast" min="0.5" max="2.0" step="0.1" value="1.0" style="width: 120px;" oninput="updateCCTVLightingControls()">
+                        </div>
+                        <div class="col-auto border-start border-secondary ps-3">
+                            <div class="form-check form-switch mt-1">
+                                <input class="form-check-input" type="checkbox" id="cctv-ctrl-lowlight" onchange="updateCCTVLightingControls()">
+                                <label class="form-check-label small fw-bold text-warning" for="cctv-ctrl-lowlight"><i class="bi bi-moon-stars-fill me-1"></i> Night CCTV Boost (CLAHE)</label>
+                            </div>
+                        </div>
+                        <div class="col-auto border-start border-secondary ps-3">
+                            <div class="form-check form-switch mt-1">
+                                <input class="form-check-input" type="checkbox" id="cctv-ctrl-denoise" onchange="updateCCTVLightingControls()">
+                                <label class="form-check-label small fw-bold text-info" for="cctv-ctrl-denoise"><i class="bi bi-water me-1"></i> CCTV Denoise Filter</label>
+                            </div>
+                        </div>
+                        <div class="col-auto ms-auto">
+                            <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 small" onclick="resetCCTVLightingControls()">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CCTV Dual Video Display -->
+            <div class="row g-3 mb-3">
+                <!-- Left: Raw CCTV Feed -->
+                <div class="col-lg-6">
+                    <div class="card bg-black border-secondary h-100">
+                        <div class="card-header bg-dark py-2 d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-light"><i class="bi bi-camera-video me-1"></i> Raw Surveillance Feed (Input)</span>
+                            <span class="badge bg-secondary" id="cctv-raw-res-pill">Waiting</span>
+                        </div>
+                        <div class="card-body p-0 d-flex justify-content-center align-items-center bg-dark text-center" style="min-height: 380px;">
+                            <img id="cctv-raw-video-img" class="img-fluid w-100" src="" alt="CCTV Stream Disconnected" style="display: none; max-height: 480px; object-fit: contain;">
+                            <div id="cctv-raw-placeholder" class="p-5 text-secondary">
+                                <i class="bi bi-camera-video-off fs-1 d-block mb-2 text-warning"></i>
+                                <span>Enter camera credentials and click <strong>Connect & Enhance CCTV Live</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Upscaled & Enhanced CCTV Output -->
+                <div class="col-lg-6">
+                    <div class="card bg-black border-secondary h-100">
+                        <div class="card-header bg-dark py-2 d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-warning"><i class="bi bi-shield-check me-1"></i> Enhanced Output (OpenMP C++ Super-Res)</span>
+                            <span class="badge bg-warning text-dark" id="cctv-upscaled-res-pill">Ready</span>
+                        </div>
+                        <div class="card-body p-0 d-flex justify-content-center align-items-center bg-dark text-center" style="min-height: 380px;">
+                            <img id="cctv-upscaled-video-img" class="img-fluid w-100" src="" alt="Enhanced CCTV Feed Disconnected" style="display: none; max-height: 480px; object-fit: contain;">
+                            <div id="cctv-upscaled-placeholder" class="p-5 text-secondary">
+                                <i class="bi bi-cpu fs-1 d-block mb-2 text-info"></i>
+                                <span>Enhanced surveillance video with high-frequency edge restoration renders here</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CCTV Live Telemetry Stats Ribbon -->
+            <div class="row g-2 mb-3">
+                <div class="col-md-3 col-sm-6">
+                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                        <span class="text-secondary small">CCTV Throughput</span>
+                        <h3 class="fw-bold text-success mb-0" id="cctv-stat-fps">--</h3>
+                        <span class="text-muted small">Real-Time FPS</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                        <span class="text-secondary small">Interpolation Latency</span>
+                        <h3 class="fw-bold text-primary mb-0" id="cctv-stat-latency">-- ms</h3>
+                        <span class="text-muted small">C++ Multi-Core Delay</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                        <span class="text-secondary small">Surveillance OSD Overlay</span>
+                        <h6 class="fw-bold text-warning mb-0 mt-1">[RIT-CAM-01]</h6>
+                        <span class="text-muted small">Campus Gate Security</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                        <span class="text-secondary small">Clarity Enhancement</span>
+                        <h3 class="fw-bold text-info mb-0" id="cctv-stat-gain">+1,477%</h3>
+                        <span class="text-muted small">Laplacian Edge Energy</span>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- End CCTV Section -->
 
         <!-- UPLOADED VIDEO MODE CONTAINER -->
         <div id="video-section" style="display: none;">

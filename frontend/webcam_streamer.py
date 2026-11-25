@@ -45,10 +45,19 @@ class WebcamStreamer:
         self.clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
 
         # Stream Mode & Source
-        self.stream_mode = 'webcam'  # 'webcam', 'cctv_url', 'cctv_campus'
+        self.stream_mode = 'webcam'  # 'webcam', 'cctv', 'cctv_url'
         self.stream_url = ''
         self.stream_source_label = 'Local USB Webcam'
         self.is_looping_video = False
+
+        # Live Enhanced Stream Recording Pipeline
+        uploads_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'uploads'))
+        os.makedirs(uploads_dir, exist_ok=True)
+        self.recorded_video_path = os.path.join(uploads_dir, 'live_enhanced_recording.mp4')
+        self.video_writer = None
+        self.writer_lock = threading.Lock()
+        self.recorded_frames_count = 0
+        self.has_recorded_video = False
 
         # Synchronisation
         self.capture_lock = threading.Lock()
@@ -86,33 +95,56 @@ class WebcamStreamer:
         self.cap = None
         self.is_looping_video = False
 
-        if mode == 'cctv_campus':
-            # 24/7 Campus CCTV Gate 1 loop
-            sample_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'uploads', 'sample-10s-360p.mp4'))
-            self.cap = cv2.VideoCapture(sample_path)
-            self.is_looping_video = True
-            self.use_synthetic = not (self.cap and self.cap.isOpened())
-            self.stream_source_label = 'Campus Gate 1 CCTV [Live Feed]'
-            print(f'[INFO] Activated Campus CCTV Simulation Feed ({sample_path}).')
-        elif mode == 'cctv_url' and self.stream_url:
-            # Live RTSP / HTTP IP Camera
-            try:
-                self.cap = cv2.VideoCapture(self.stream_url)
-                if self.cap.isOpened():
-                    self.use_synthetic = False
-                    self.stream_source_label = f'Live IP/CCTV: {self.stream_url}'
-                    print(f'[INFO] Connected to live IP/CCTV stream: {self.stream_url}')
-                else:
-                    print(f'[WARN] Could not connect to {self.stream_url}. Falling back to campus CCTV feed.')
-                    sample_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'uploads', 'sample-10s-360p.mp4'))
-                    self.cap = cv2.VideoCapture(sample_path)
-                    self.is_looping_video = True
-                    self.use_synthetic = not (self.cap and self.cap.isOpened())
-                    self.stream_source_label = 'Campus Gate CCTV (Live Fallback)'
-            except Exception as e:
-                print(f'[ERROR] Failed to open stream {self.stream_url}: {e}')
-                self.use_synthetic = True
-                self.stream_source_label = 'CCTV Failover Synthetic'
+        # Reset live recording session
+        with self.writer_lock:
+            if self.video_writer:
+                try:
+                    self.video_writer.release()
+                except Exception:
+                    pass
+                self.video_writer = None
+            self.recorded_frames_count = 0
+            self.has_recorded_video = False
+
+        # Reset recording state
+        with self.writer_lock:
+            if self.video_writer:
+                try:
+                    self.video_writer.release()
+                except Exception:
+                    pass
+                self.video_writer = None
+            self.recorded_frames_count = 0
+            self.has_recorded_video = False
+
+        if mode in ['cctv', 'cctv_url']:
+            if self.stream_url:
+                # Live RTSP / HTTP IP Camera
+                try:
+                    self.cap = cv2.VideoCapture(self.stream_url)
+                    if self.cap.isOpened():
+                        self.use_synthetic = False
+                        self.stream_source_label = f'Live IP/CCTV: {self.stream_url}'
+                        print(f'[INFO] Connected to live IP/CCTV stream: {self.stream_url}')
+                    else:
+                        print(f'[WARN] Could not connect to {self.stream_url}. Falling back to campus CCTV feed.')
+                        sample_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'uploads', 'sample-10s-360p.mp4'))
+                        self.cap = cv2.VideoCapture(sample_path)
+                        self.is_looping_video = True
+                        self.use_synthetic = not (self.cap and self.cap.isOpened())
+                        self.stream_source_label = 'Campus Gate 1 CCTV [Live Demo]'
+                except Exception as e:
+                    print(f'[ERROR] Failed to open stream {self.stream_url}: {e}')
+                    self.use_synthetic = True
+                    self.stream_source_label = 'CCTV Failover Synthetic'
+            else:
+                # No URL provided -> fallback to Campus Gate sample simulation
+                sample_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'uploads', 'sample-10s-360p.mp4'))
+                self.cap = cv2.VideoCapture(sample_path)
+                self.is_looping_video = True
+                self.use_synthetic = not (self.cap and self.cap.isOpened())
+                self.stream_source_label = 'Campus Gate 1 CCTV [Live Demo]'
+                print(f'[INFO] Activated Campus CCTV Simulation Feed ({sample_path}).')
         else:
             # Standard Webcam Mode
             self.stream_mode = 'webcam'
@@ -174,6 +206,21 @@ class WebcamStreamer:
             except Exception:
                 pass
             self.cap = None
+
+        # Finalize and close recorded live video
+        with self.writer_lock:
+            if self.video_writer:
+                try:
+                    self.video_writer.release()
+                except Exception as e:
+                    print(f'[WARN] Error releasing video writer: {e}')
+                self.video_writer = None
+
+            if os.path.exists(self.recorded_video_path) and os.path.getsize(self.recorded_video_path) > 1024 and self.recorded_frames_count > 0:
+                self.has_recorded_video = True
+                print(f'[INFO] Saved live enhanced video session ({self.recorded_frames_count} frames, {os.path.getsize(self.recorded_video_path)} bytes) to {self.recorded_video_path}')
+            else:
+                self.has_recorded_video = False
 
     def set_controls(self, scale=None, method=None, policy=None, threads=None,
                      target_fps=None, adaptive=None, workload=None, show_heatmap=None,
@@ -386,6 +433,20 @@ class WebcamStreamer:
                 except Exception:
                     pass
 
+            # Record enhanced frame to live video recording
+            with self.writer_lock:
+                if self.is_running and display_upscaled is not None:
+                    try:
+                        dh, dw = display_upscaled.shape[:2]
+                        if self.video_writer is None:
+                            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                            self.video_writer = cv2.VideoWriter(self.recorded_video_path, fourcc, 30.0, (dw, dh))
+                        if self.video_writer and self.video_writer.isOpened():
+                            self.video_writer.write(display_upscaled)
+                            self.recorded_frames_count += 1
+                    except Exception:
+                        pass
+
             _, raw_jpeg = cv2.imencode('.jpg', frame_to_upscale, [cv2.IMWRITE_JPEG_QUALITY, 85])
             _, upscaled_jpeg = cv2.imencode('.jpg', display_upscaled, [cv2.IMWRITE_JPEG_QUALITY, 85])
 
@@ -428,5 +489,10 @@ class WebcamStreamer:
         status['upscaled_res'] = self.upscaled_res_str
         status['stream_mode'] = self.stream_mode
         status['stream_source_label'] = self.stream_source_label
+
+        # Enhanced Live Video Recording Metadata
+        status['has_recorded_video'] = self.has_recorded_video
+        status['recorded_frames'] = self.recorded_frames_count
+        status['recorded_video_size_kb'] = round(os.path.getsize(self.recorded_video_path) / 1024.0, 1) if (self.has_recorded_video and os.path.exists(self.recorded_video_path)) else 0.0
 
         return status
