@@ -132,7 +132,7 @@ class WebcamStreamer:
                         self.cap = cv2.VideoCapture(sample_path)
                         self.is_looping_video = True
                         self.use_synthetic = not (self.cap and self.cap.isOpened())
-                        self.stream_source_label = 'Campus Gate 1 CCTV [Live Demo]'
+                        self.stream_source_label = 'Security Camera 01 [Live Demo]'
                 except Exception as e:
                     print(f'[ERROR] Failed to open stream {self.stream_url}: {e}')
                     self.use_synthetic = True
@@ -143,8 +143,8 @@ class WebcamStreamer:
                 self.cap = cv2.VideoCapture(sample_path)
                 self.is_looping_video = True
                 self.use_synthetic = not (self.cap and self.cap.isOpened())
-                self.stream_source_label = 'Campus Gate 1 CCTV [Live Demo]'
-                print(f'[INFO] Activated Campus CCTV Simulation Feed ({sample_path}).')
+                self.stream_source_label = 'Security Camera 01 [Live Demo]'
+                print(f'[INFO] Activated Surveillance Simulation Feed ({sample_path}).')
         else:
             # Standard Webcam Mode
             self.stream_mode = 'webcam'
@@ -326,7 +326,7 @@ class WebcamStreamer:
 
                 if ret and frame is not None and self.stream_mode in ['cctv_campus', 'cctv_url']:
                     now_str = time.strftime('%Y-%m-%d %H:%M:%S') + f'.{int((time.time() % 1) * 1000):03d}'
-                    cam_id = 'RIT-CAM-01 | RIT CAMPUS MAIN GATE' if self.stream_mode == 'cctv_campus' else 'CAM-IP | LIVE CCTV'
+                    cam_id = 'SEC-CAM-01 | LIVE SURVEILLANCE' if self.stream_mode == 'cctv_campus' else 'CAM-IP | LIVE CCTV'
                     label = f'[{cam_id} | {now_str} | REC]'
                     cv2.putText(frame, label, (12, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (0, 0, 0), 2, cv2.LINE_AA)
                     cv2.putText(frame, label, (12, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (0, 255, 255), 1, cv2.LINE_AA)

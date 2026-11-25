@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setupZoomListeners();
 });
 
-let currentMode = 'webcam';
 let cctvActive = false;
 
 function switchMode(mode) {

@@ -7,18 +7,18 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css?v=14.0">
 </head>
-<body class="bg-dark text-light">
+<body class="bg-light text-dark">
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-secondary px-4 py-2">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm px-4 py-2">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#">
                 <i class="bi bi-cpu-fill text-primary fs-3"></i>
                 <span>VISIONBOOST</span>
                 <span class="badge bg-primary text-uppercase ms-1">Real-Time Visual Enhancement Engine</span>
-                <span class="badge bg-dark border border-secondary text-info ms-2">RIT Dept. of AI & DS</span>
+                
             </a>
             <div class="d-flex gap-3 align-items-center">
                 <a href="/" class="btn btn-outline-primary btn-sm active"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
@@ -31,10 +31,9 @@
     <div class="container-fluid px-4 py-3">
         <!-- Mode Toggle & Global Banner -->
         <div class="row mb-3 align-items-center">
-            <div class="col-md-7">
-                <h5 class="fw-bold mb-1"><i class="bi bi-stars text-warning me-1"></i> VISIONBOOST: Multi-Core Parallel Visual Enhancement & Surveillance Super-Resolution</h5>
-                <p class="text-secondary small mb-0">Ramaiah Institute of Technology | Dept. of AI & DS | Guided by <strong>Dr. Vinay T. R.</strong><br>
-                <span class="text-info fw-semibold">Team:</span> Mandar Bhat (1MS24AD038), M R Abhishek (1MS24AD036), Surajit Mondal (1MS24AD060)</p>
+            <div class="col-md-6">
+                <h5 class="fw-bold mb-1 text-primary"><i class="bi bi-cpu-fill me-1"></i> VISIONBOOST: Multi-Core Visual Enhancement Engine</h5>
+                <p class="text-secondary small mb-0">Real-Time Adaptive Super-Resolution & Visual Restoration</p>
             </div>
             <div class="col-md-6 d-flex justify-content-end gap-2">
                 <div class="btn-group shadow" role="group">
@@ -57,11 +56,11 @@
         <!-- WEBCAM / LIVE CCTV MODE CONTAINER -->
         <div id="webcam-section">
             <!-- Clean Live Webcam Action Strip -->
-            <div class="card bg-black border-secondary mb-3 shadow-sm">
+            <div class="card bg-white border-secondary-subtle mb-3 shadow-sm">
                 <div class="card-body py-2 px-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
                     <div class="d-flex align-items-center gap-2">
-                        <span class="fw-bold text-light"><i class="bi bi-webcam text-info me-1"></i> Live USB Webcam Enhancement</span>
-                        <span class="badge bg-dark border border-secondary text-secondary">Zero-Latency C++ OpenMP</span>
+                        <span class="fw-bold text-dark"><i class="bi bi-webcam text-info me-1"></i> Live USB Webcam Enhancement</span>
+                        <span class="badge bg-dark border border-secondary-subtle text-secondary">Zero-Latency C++ OpenMP</span>
                         <span id="webcam-rec-pill" class="badge bg-danger text-light" style="display: none;">
                             <i class="bi bi-record-circle-fill me-1"></i> RECORDING ENHANCED STREAM
                         </span>
@@ -78,7 +77,7 @@
                 </div>
             </div>
             <!-- Controls Toolbar -->
-            <div class="card bg-black border-secondary mb-3 shadow-sm">
+            <div class="card bg-white border-secondary-subtle mb-3 shadow-sm">
                 <div class="card-body py-2 px-3">
                     <div class="row g-3 align-items-center">
                         <!-- Camera Start/Stop -->
@@ -89,9 +88,9 @@
                         </div>
 
                         <!-- Scale Factor -->
-                        <div class="col-auto border-start border-secondary ps-3">
+                        <div class="col-auto border-start border-secondary-subtle ps-3">
                             <label class="small text-secondary d-block">Upscale Factor</label>
-                            <select id="ctrl-scale" class="form-select form-select-sm bg-dark text-light border-secondary" onchange="updateControls()">
+                            <select id="ctrl-scale" class="form-select form-select-sm bg-white text-dark border" onchange="updateControls()">
                                 <option value="2.0" selected>2x Scaling</option>
                                 <option value="4.0">4x Scaling</option>
                             </select>
@@ -100,7 +99,7 @@
                         <!-- Mode / Algorithm -->
                         <div class="col-auto">
                             <label class="small text-secondary d-block">Processing Policy</label>
-                            <select id="ctrl-policy" class="form-select form-select-sm bg-dark text-light border-secondary" onchange="updateControls()">
+                            <select id="ctrl-policy" class="form-select form-select-sm bg-white text-dark border" onchange="updateControls()">
                                 <option value="OPENMP_STATIC" selected>OpenMP Static</option>
                                 <option value="OPENMP_DYNAMIC">OpenMP Dynamic</option>
                                 <option value="OPENMP_GUIDED">OpenMP Guided</option>
@@ -111,7 +110,7 @@
                         <!-- Threads -->
                         <div class="col-auto">
                             <label class="small text-secondary d-block">OpenMP Threads</label>
-                            <select id="ctrl-threads" class="form-select form-select-sm bg-dark text-light border-secondary" onchange="updateControls()">
+                            <select id="ctrl-threads" class="form-select form-select-sm bg-white text-dark border" onchange="updateControls()">
                                 <option value="1">1 Thread</option>
                                 <option value="2">2 Threads</option>
                                 <option value="4">4 Threads</option>
@@ -123,7 +122,7 @@
                         <!-- Edge Sharpening Boost -->
                         <div class="col-auto">
                             <label class="small text-warning d-block"><i class="bi bi-magic me-1"></i>Detail Boost</label>
-                            <select id="ctrl-enhancement" class="form-select form-select-sm bg-dark text-warning border-warning" onchange="updateControls()">
+                            <select id="ctrl-enhancement" class="form-select form-select-sm bg-white text-dark border-warning" onchange="updateControls()">
                                 <option value="3.5" selected>🔥 Extreme Super-Resolution (+3.5x)</option>
                                 <option value="4.5">⚡ Cinematic Maximum (+4.5x)</option>
                                 <option value="2.0">✨ Balanced Super-Res (+2.0x)</option>
@@ -134,7 +133,7 @@
                         <!-- Target FPS -->
                         <div class="col-auto">
                             <label class="small text-secondary d-block">Target FPS (Budget)</label>
-                            <select id="ctrl-target-fps" class="form-select form-select-sm bg-dark text-warning border-warning fw-bold" onchange="updateControls()">
+                            <select id="ctrl-target-fps" class="form-select form-select-sm bg-white text-dark border-warning fw-bold" onchange="updateControls()">
                                 <option value="120" selected>⚡ 120 FPS (8.3 ms - Ultra Speed)</option>
                                 <option value="60">60 FPS (16.7 ms)</option>
                                 <option value="30">30 FPS (33.3 ms)</option>
@@ -143,7 +142,7 @@
                         </div>
 
                         <!-- Manual or Adaptive -->
-                        <div class="col-auto border-start border-secondary ps-3">
+                        <div class="col-auto border-start border-secondary-subtle ps-3">
                             <label class="small text-secondary d-block">Adaptivity</label>
                             <div class="form-check form-switch mt-1">
                                 <input class="form-check-input" type="checkbox" id="ctrl-adaptive" checked onchange="updateControls()">
@@ -152,7 +151,7 @@
                         </div>
 
                         <!-- Workload Stress Control -->
-                        <div class="col-auto border-start border-secondary ps-3">
+                        <div class="col-auto border-start border-secondary-subtle ps-3">
                             <label class="small text-secondary d-block"><i class="bi bi-fire text-warning me-1"></i>Stress Workload</label>
                             <div class="btn-group btn-group-sm" role="group">
                                 <button type="button" class="btn btn-outline-secondary text-light active" id="wl-normal" onclick="setWorkload('NORMAL')">Normal</button>
@@ -165,7 +164,7 @@
             </div>
 
             <!-- Lighting & Sensor Adjustments Panel (Section 1.4 Objectives) -->
-            <div class="card bg-black border-secondary border-opacity-50 mb-3 shadow-sm">
+            <div class="card bg-white border-secondary-subtle border-opacity-50 mb-3 shadow-sm">
                 <div class="card-body py-2 px-3">
                     <div class="row g-3 align-items-center">
                         <div class="col-auto">
@@ -180,7 +179,7 @@
                             <input type="range" class="form-range form-range-sm" id="ctrl-brightness" min="-50" max="50" value="0" style="width: 120px;" oninput="updateLightingControls()">
                         </div>
                         <!-- Contrast / Gamma Slider -->
-                        <div class="col-auto border-start border-secondary ps-3">
+                        <div class="col-auto border-start border-secondary-subtle ps-3">
                             <label class="small text-secondary d-flex justify-content-between">
                                 <span>Contrast (Gamma)</span>
                                 <span class="text-light fw-bold ms-2" id="val-contrast">1.0x</span>
@@ -188,14 +187,14 @@
                             <input type="range" class="form-range form-range-sm" id="ctrl-contrast" min="0.5" max="2.0" step="0.1" value="1.0" style="width: 120px;" oninput="updateLightingControls()">
                         </div>
                         <!-- Low-Light CCTV Night Boost (CLAHE / Hist Eq - Silva et al. [5]) -->
-                        <div class="col-auto border-start border-secondary ps-3">
+                        <div class="col-auto border-start border-secondary-subtle ps-3">
                             <div class="form-check form-switch mt-1">
                                 <input class="form-check-input" type="checkbox" id="ctrl-lowlight" onchange="updateLightingControls()">
                                 <label class="form-check-label small fw-bold text-warning" for="ctrl-lowlight"><i class="bi bi-moon-stars-fill me-1"></i> Low-Light Night Boost (CLAHE)</label>
                             </div>
                         </div>
                         <!-- Denoising Filter (Dolwithayaku et al. [4]) -->
-                        <div class="col-auto border-start border-secondary ps-3">
+                        <div class="col-auto border-start border-secondary-subtle ps-3">
                             <div class="form-check form-switch mt-1">
                                 <input class="form-check-input" type="checkbox" id="ctrl-denoise" onchange="updateLightingControls()">
                                 <label class="form-check-label small fw-bold text-info" for="ctrl-denoise"><i class="bi bi-water me-1"></i> Spatial Denoise Filter</label>
@@ -213,35 +212,35 @@
             <!-- Live Telemetry Stats Ribbon -->
             <div class="row g-2 mb-3">
                 <div class="col-md-2 col-sm-4">
-                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                    <div class="card bg-white border-secondary-subtle p-2 text-center h-100">
                         <span class="text-secondary small">Processing FPS</span>
                         <h3 class="fw-bold text-success mb-0" id="stat-fps">--</h3>
                         <span class="text-muted small" id="stat-target-fps">Target: 30 FPS</span>
                     </div>
                 </div>
                 <div class="col-md-2 col-sm-4">
-                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                    <div class="card bg-white border-secondary-subtle p-2 text-center h-100">
                         <span class="text-secondary small">Interp. Latency</span>
                         <h3 class="fw-bold text-primary mb-0" id="stat-interp-latency">-- ms</h3>
                         <span class="text-muted small" id="stat-budget">Budget: 33.3 ms</span>
                     </div>
                 </div>
                 <div class="col-md-2 col-sm-4">
-                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                    <div class="card bg-white border-secondary-subtle p-2 text-center h-100">
                         <span class="text-secondary small">End-to-End Latency</span>
                         <h3 class="fw-bold text-info mb-0" id="stat-e2e-latency">-- ms</h3>
                         <span class="text-muted small">Capture -> Display</span>
                     </div>
                 </div>
                 <div class="col-md-2 col-sm-4">
-                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                    <div class="card bg-white border-secondary-subtle p-2 text-center h-100">
                         <span class="text-secondary small">Active Method</span>
                         <h3 class="fw-bold text-warning mb-0" id="stat-method">BICUBIC</h3>
                         <span class="badge bg-secondary" id="stat-threads">4 Threads</span>
                     </div>
                 </div>
                 <div class="col-md-2 col-sm-4">
-                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                    <div class="card bg-white border-secondary-subtle p-2 text-center h-100">
                         <span class="text-secondary small">Adaptive Status</span>
                         <div class="mt-1">
                             <span class="badge bg-success fs-6" id="stat-adaptive-badge">Stable</span>
@@ -250,7 +249,7 @@
                     </div>
                 </div>
                 <div class="col-md-2 col-sm-4">
-                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                    <div class="card bg-white border-secondary-subtle p-2 text-center h-100">
                         <span class="text-secondary small">Dropped Frames</span>
                         <h3 class="fw-bold text-danger mb-0" id="stat-dropped">0</h3>
                         <span class="text-muted small">Stale queue drops</span>
@@ -259,7 +258,7 @@
             </div>
 
             <!-- Visual Enhancement & Quality Analytics Bar -->
-            <div class="card bg-black border-secondary p-2 mb-3">
+            <div class="card bg-white border-secondary-subtle p-2 mb-3">
                 <div class="row align-items-center g-2">
                     <div class="col-lg-7 d-flex flex-wrap align-items-center gap-2">
                         <span class="small fw-bold text-info"><i class="bi bi-eye-fill me-1"></i>Visual Inspection:</span>
@@ -280,18 +279,18 @@
             </div>
 
             <!-- Mathematical Enhancement Quality Strip -->
-            <div class="card bg-dark border-secondary p-2 mb-3">
+            <div class="card bg-white border-secondary-subtle p-2 mb-3">
                 <div class="row text-center g-2 small">
-                    <div class="col-md-3 border-end border-secondary">
+                    <div class="col-md-3 border-end border-secondary-subtle">
                         <span class="text-secondary d-block">Input Pixel Grid</span>
                         <strong class="text-light" id="stat-raw-px">640x360 (230,400 px)</strong>
                     </div>
-                    <div class="col-md-3 border-end border-secondary">
+                    <div class="col-md-3 border-end border-secondary-subtle">
                         <span class="text-secondary d-block">Output Synthesized Grid</span>
                         <strong class="text-info" id="stat-up-px">1280x720 (921,600 px)</strong>
                         <span class="badge bg-success ms-1" id="stat-px-gain">+300% Data</span>
                     </div>
-                    <div class="col-md-3 border-end border-secondary">
+                    <div class="col-md-3 border-end border-secondary-subtle">
                         <span class="text-secondary d-block">Edge Definition (Laplacian Energy)</span>
                         <strong class="text-warning" id="stat-edge-gain">Calculating...</strong>
                     </div>
@@ -306,12 +305,12 @@
             <div class="row g-3 mb-3">
                 <!-- Left: Original Video -->
                 <div class="col-lg-6">
-                    <div class="card bg-black border-secondary h-100">
-                        <div class="card-header bg-dark py-2 d-flex justify-content-between align-items-center">
-                            <span class="fw-bold text-light"><i class="bi bi-camera me-1"></i> Original Video (Input)</span>
+                    <div class="card bg-white border-secondary-subtle h-100">
+                        <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-dark"><i class="bi bi-camera me-1"></i> Original Video (Input)</span>
                             <span class="badge bg-secondary" id="raw-res-pill">640x360</span>
                         </div>
-                        <div class="card-body p-0 d-flex justify-content-center align-items-center bg-dark text-center" style="min-height: 380px;">
+                        <div class="card-body p-0 d-flex justify-content-center align-items-center bg-light text-center video-placeholder-box" style="min-height: 380px;">
                             <img id="raw-video-img" class="img-fluid w-100" src="" alt="Camera Feed Stopped" class="img-fluid w-100" style="display: none; max-height: 480px; object-fit: contain;">
                             <div id="raw-placeholder" class="p-5 text-secondary">
                                 <i class="bi bi-camera-video-off fs-1 d-block mb-2"></i>
@@ -323,12 +322,12 @@
 
                 <!-- Right: Upscaled Video -->
                 <div class="col-lg-6">
-                    <div class="card bg-black border-secondary h-100">
-                        <div class="card-header bg-dark py-2 d-flex justify-content-between align-items-center">
+                    <div class="card bg-white border-secondary-subtle h-100">
+                        <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
                             <span class="fw-bold text-primary"><i class="bi bi-stars me-1"></i> Upscaled Output (OpenMP C++)</span>
                             <span class="badge bg-primary" id="upscaled-res-pill">1280x720 (2x)</span>
                         </div>
-                        <div class="card-body p-0 d-flex justify-content-center align-items-center bg-dark text-center" style="min-height: 380px;">
+                        <div class="card-body p-0 d-flex justify-content-center align-items-center bg-light text-center video-placeholder-box" style="min-height: 380px;">
                             <img id="upscaled-video-img" class="img-fluid w-100" src="" alt="Upscaled Feed Stopped" class="img-fluid w-100" style="display: none; max-height: 480px; object-fit: contain;">
                             <div id="upscaled-placeholder" class="p-5 text-secondary">
                                 <i class="bi bi-cpu fs-1 d-block mb-2"></i>
@@ -342,7 +341,7 @@
             <!-- Synchronized 4x Pixel Micro-Inspection Loupe Row -->
             <div id="zoom-loupe-row" class="row g-3 mb-3">
                 <div class="col-lg-6">
-                    <div class="card bg-black border-secondary p-2">
+                    <div class="card bg-white border-secondary-subtle p-2">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="small fw-bold text-secondary"><i class="bi bi-grid-3x3 me-1"></i> Original 4x Micro-Zoom (Raw Pixel Grid)</span>
                             <span class="badge bg-secondary" id="raw-sharpness-badge">Sharpness: --</span>
@@ -354,7 +353,7 @@
                     </div>
                 </div>
                 <div class="col-lg-6">
-                    <div class="card bg-black border-secondary p-2">
+                    <div class="card bg-white border-secondary-subtle p-2">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="small fw-bold text-primary"><i class="bi bi-magic me-1"></i> OpenMP 4x Micro-Zoom (Synthesized Sub-Pixels)</span>
                             <span class="badge bg-primary" id="upscaled-sharpness-badge">Sharpness: --</span>
@@ -370,8 +369,8 @@
             <!-- Real-time Charts & Adaptive Decision History -->
             <div class="row g-3">
                 <div class="col-lg-7">
-                    <div class="card bg-black border-secondary h-100">
-                        <div class="card-header bg-dark py-2 d-flex justify-content-between align-items-center">
+                    <div class="card bg-white border-secondary-subtle h-100">
+                        <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
                             <span class="fw-bold"><i class="bi bi-activity me-1"></i> Real-Time Performance History</span>
                             <span class="small text-muted">Last 30 samples</span>
                         </div>
@@ -384,8 +383,8 @@
                 </div>
 
                 <div class="col-lg-5">
-                    <div class="card bg-black border-secondary h-100">
-                        <div class="card-header bg-dark py-2 d-flex justify-content-between align-items-center">
+                    <div class="card bg-white border-secondary-subtle h-100">
+                        <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
                             <span class="fw-bold text-info"><i class="bi bi-clock-history me-1"></i> Adaptive Decision History</span>
                             <span class="badge bg-info text-dark" id="decision-count-badge">0 Events</span>
                         </div>
@@ -415,8 +414,8 @@
         <!-- LIVE CCTV & SURVEILLANCE IP CAMERA MODE CONTAINER -->
         <div id="cctv-section" style="display: none;">
             <!-- Dedicated CCTV Credentials & Stream Connection Box -->
-            <div class="card bg-black border-warning border-opacity-75 mb-3 shadow">
-                <div class="card-header bg-dark d-flex justify-content-between align-items-center py-2">
+            <div class="card bg-white border-warning border-opacity-75 mb-3 shadow">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
                     <span class="fw-bold text-warning">
                         <i class="bi bi-shield-lock-fill me-1"></i> Live CCTV & IP Camera Credentials & Stream Configuration
                     </span>
@@ -428,25 +427,25 @@
                         <div class="col-md-3">
                             <label class="small text-secondary mb-1">Camera IP / Host</label>
                             <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-dark text-warning border-secondary"><i class="bi bi-router"></i></span>
-                                <input type="text" class="form-control bg-dark text-light border-secondary" id="cctv-ip" placeholder="192.168.1.100" value="192.168.1.64" oninput="updateCCTVUrlFromCredentials()">
+                                <span class="input-group-text bg-dark text-warning border-secondary-subtle"><i class="bi bi-router"></i></span>
+                                <input type="text" class="form-control bg-white text-dark border" id="cctv-ip" placeholder="192.168.1.100" value="192.168.1.64" oninput="updateCCTVUrlFromCredentials()">
                             </div>
                         </div>
                         <div class="col-md-2">
                             <label class="small text-secondary mb-1">RTSP / HTTP Port</label>
-                            <input type="number" class="form-control form-control-sm bg-dark text-light border-secondary" id="cctv-port" placeholder="554" value="554" oninput="updateCCTVUrlFromCredentials()">
+                            <input type="number" class="form-control form-control-sm bg-white text-dark border" id="cctv-port" placeholder="554" value="554" oninput="updateCCTVUrlFromCredentials()">
                         </div>
                         <div class="col-md-2">
                             <label class="small text-secondary mb-1">Username</label>
-                            <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" id="cctv-user" placeholder="admin" value="admin" oninput="updateCCTVUrlFromCredentials()">
+                            <input type="text" class="form-control form-control-sm bg-white text-dark border" id="cctv-user" placeholder="admin" value="admin" oninput="updateCCTVUrlFromCredentials()">
                         </div>
                         <div class="col-md-2">
                             <label class="small text-secondary mb-1">Password</label>
-                            <input type="password" class="form-control form-control-sm bg-dark text-light border-secondary" id="cctv-pass" placeholder="Password" value="admin123" oninput="updateCCTVUrlFromCredentials()">
+                            <input type="password" class="form-control form-control-sm bg-white text-dark border" id="cctv-pass" placeholder="Password" value="admin123" oninput="updateCCTVUrlFromCredentials()">
                         </div>
                         <div class="col-md-3">
                             <label class="small text-secondary mb-1">Channel / Path</label>
-                            <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" id="cctv-path" placeholder="/h264/ch1/main" value="/h264/ch1/main" oninput="updateCCTVUrlFromCredentials()">
+                            <input type="text" class="form-control form-control-sm bg-white text-dark border" id="cctv-path" placeholder="/h264/ch1/main" value="/h264/ch1/main" oninput="updateCCTVUrlFromCredentials()">
                         </div>
                     </div>
 
@@ -455,8 +454,8 @@
                         <div class="col-md-7">
                             <label class="small text-secondary mb-1">Live Stream URL (Auto-Generated from Credentials or Edit Directly)</label>
                             <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-dark text-warning border-secondary"><i class="bi bi-link-45deg"></i></span>
-                                <input type="text" class="form-control bg-dark text-warning border-secondary fw-semibold" id="cctv-stream-url" placeholder="rtsp://admin:admin123@192.168.1.64:554/h264/ch1/main">
+                                <span class="input-group-text bg-dark text-warning border-secondary-subtle"><i class="bi bi-link-45deg"></i></span>
+                                <input type="text" class="form-control bg-dark text-warning border-secondary-subtle fw-semibold" id="cctv-stream-url" placeholder="rtsp://admin:admin123@192.168.1.64:554/h264/ch1/main">
                             </div>
                         </div>
                         <div class="col-md-5 d-flex gap-2 align-items-end pt-3">
@@ -473,7 +472,7 @@
                     </div>
 
                     <!-- Connect Action Button & Recording Download Bar -->
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 border-top border-secondary border-opacity-50">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 border-top border-secondary-subtle border-opacity-50">
                         <div class="d-flex align-items-center gap-2">
                             <button id="cctv-toggle-btn" class="btn btn-warning btn-sm px-4 fw-bold" onclick="toggleCCTVStream()">
                                 <i class="bi bi-play-circle-fill me-1"></i> Connect & Enhance CCTV Live
@@ -481,7 +480,7 @@
                             <span id="cctv-rec-pill" class="badge bg-danger text-light" style="display: none;">
                                 <i class="bi bi-record-circle-fill me-1"></i> RECORDING ENHANCED CCTV STREAM
                             </span>
-                            <span class="badge bg-dark border border-secondary text-info px-2 py-1" id="cctv-active-badge">
+                            <span class="badge bg-dark border border-secondary-subtle text-info px-2 py-1" id="cctv-active-badge">
                                 <i class="bi bi-broadcast text-warning me-1"></i> <span id="cctv-active-label">Ready to connect</span>
                             </span>
                         </div>
@@ -496,7 +495,7 @@
             </div>
 
             <!-- CCTV Lighting & Night Vision Enhancements (Section 1.4) -->
-            <div class="card bg-black border-secondary border-opacity-50 mb-3 shadow-sm">
+            <div class="card bg-white border-secondary-subtle border-opacity-50 mb-3 shadow-sm">
                 <div class="card-body py-2 px-3">
                     <div class="row g-3 align-items-center">
                         <div class="col-auto">
@@ -509,20 +508,20 @@
                             </label>
                             <input type="range" class="form-range form-range-sm" id="cctv-ctrl-brightness" min="-50" max="50" value="0" style="width: 120px;" oninput="updateCCTVLightingControls()">
                         </div>
-                        <div class="col-auto border-start border-secondary ps-3">
+                        <div class="col-auto border-start border-secondary-subtle ps-3">
                             <label class="small text-secondary d-flex justify-content-between">
                                 <span>Contrast (Gamma)</span>
                                 <span class="text-light fw-bold ms-2" id="cctv-val-contrast">1.0x</span>
                             </label>
                             <input type="range" class="form-range form-range-sm" id="cctv-ctrl-contrast" min="0.5" max="2.0" step="0.1" value="1.0" style="width: 120px;" oninput="updateCCTVLightingControls()">
                         </div>
-                        <div class="col-auto border-start border-secondary ps-3">
+                        <div class="col-auto border-start border-secondary-subtle ps-3">
                             <div class="form-check form-switch mt-1">
                                 <input class="form-check-input" type="checkbox" id="cctv-ctrl-lowlight" onchange="updateCCTVLightingControls()">
                                 <label class="form-check-label small fw-bold text-warning" for="cctv-ctrl-lowlight"><i class="bi bi-moon-stars-fill me-1"></i> Night CCTV Boost (CLAHE)</label>
                             </div>
                         </div>
-                        <div class="col-auto border-start border-secondary ps-3">
+                        <div class="col-auto border-start border-secondary-subtle ps-3">
                             <div class="form-check form-switch mt-1">
                                 <input class="form-check-input" type="checkbox" id="cctv-ctrl-denoise" onchange="updateCCTVLightingControls()">
                                 <label class="form-check-label small fw-bold text-info" for="cctv-ctrl-denoise"><i class="bi bi-water me-1"></i> CCTV Denoise Filter</label>
@@ -541,12 +540,12 @@
             <div class="row g-3 mb-3">
                 <!-- Left: Raw CCTV Feed -->
                 <div class="col-lg-6">
-                    <div class="card bg-black border-secondary h-100">
-                        <div class="card-header bg-dark py-2 d-flex justify-content-between align-items-center">
-                            <span class="fw-bold text-light"><i class="bi bi-camera-video me-1"></i> Raw Surveillance Feed (Input)</span>
+                    <div class="card bg-white border-secondary-subtle h-100">
+                        <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-dark"><i class="bi bi-camera-video me-1"></i> Raw Surveillance Feed (Input)</span>
                             <span class="badge bg-secondary" id="cctv-raw-res-pill">Waiting</span>
                         </div>
-                        <div class="card-body p-0 d-flex justify-content-center align-items-center bg-dark text-center" style="min-height: 380px;">
+                        <div class="card-body p-0 d-flex justify-content-center align-items-center bg-light text-center video-placeholder-box" style="min-height: 380px;">
                             <img id="cctv-raw-video-img" class="img-fluid w-100" src="" alt="CCTV Stream Disconnected" style="display: none; max-height: 480px; object-fit: contain;">
                             <div id="cctv-raw-placeholder" class="p-5 text-secondary">
                                 <i class="bi bi-camera-video-off fs-1 d-block mb-2 text-warning"></i>
@@ -558,12 +557,12 @@
 
                 <!-- Right: Upscaled & Enhanced CCTV Output -->
                 <div class="col-lg-6">
-                    <div class="card bg-black border-secondary h-100">
-                        <div class="card-header bg-dark py-2 d-flex justify-content-between align-items-center">
+                    <div class="card bg-white border-secondary-subtle h-100">
+                        <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
                             <span class="fw-bold text-warning"><i class="bi bi-shield-check me-1"></i> Enhanced Output (OpenMP C++ Super-Res)</span>
                             <span class="badge bg-warning text-dark" id="cctv-upscaled-res-pill">Ready</span>
                         </div>
-                        <div class="card-body p-0 d-flex justify-content-center align-items-center bg-dark text-center" style="min-height: 380px;">
+                        <div class="card-body p-0 d-flex justify-content-center align-items-center bg-light text-center video-placeholder-box" style="min-height: 380px;">
                             <img id="cctv-upscaled-video-img" class="img-fluid w-100" src="" alt="Enhanced CCTV Feed Disconnected" style="display: none; max-height: 480px; object-fit: contain;">
                             <div id="cctv-upscaled-placeholder" class="p-5 text-secondary">
                                 <i class="bi bi-cpu fs-1 d-block mb-2 text-info"></i>
@@ -577,28 +576,28 @@
             <!-- CCTV Live Telemetry Stats Ribbon -->
             <div class="row g-2 mb-3">
                 <div class="col-md-3 col-sm-6">
-                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                    <div class="card bg-white border-secondary-subtle p-2 text-center h-100">
                         <span class="text-secondary small">CCTV Throughput</span>
                         <h3 class="fw-bold text-success mb-0" id="cctv-stat-fps">--</h3>
                         <span class="text-muted small">Real-Time FPS</span>
                     </div>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                    <div class="card bg-white border-secondary-subtle p-2 text-center h-100">
                         <span class="text-secondary small">Interpolation Latency</span>
                         <h3 class="fw-bold text-primary mb-0" id="cctv-stat-latency">-- ms</h3>
                         <span class="text-muted small">C++ Multi-Core Delay</span>
                     </div>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                    <div class="card bg-white border-secondary-subtle p-2 text-center h-100">
                         <span class="text-secondary small">Surveillance OSD Overlay</span>
-                        <h6 class="fw-bold text-warning mb-0 mt-1">[RIT-CAM-01]</h6>
-                        <span class="text-muted small">Campus Gate Security</span>
+                        <h6 class="fw-bold text-warning mb-0 mt-1">[SEC-CAM-01]</h6>
+                        <span class="text-muted small">Surveillance Security Feed</span>
                     </div>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                    <div class="card bg-black border-secondary p-2 text-center h-100">
+                    <div class="card bg-white border-secondary-subtle p-2 text-center h-100">
                         <span class="text-secondary small">Clarity Enhancement</span>
                         <h3 class="fw-bold text-info mb-0" id="cctv-stat-gain">+1,477%</h3>
                         <span class="text-muted small">Laplacian Edge Energy</span>
@@ -612,8 +611,8 @@
             <div class="row g-3">
                 <!-- Left: Form Controls -->
                 <div class="col-lg-4">
-                    <div class="card bg-black border-secondary">
-                        <div class="card-header bg-dark fw-bold d-flex justify-content-between align-items-center">
+                    <div class="card bg-white border-secondary-subtle">
+                        <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
                             <span><i class="bi bi-upload me-1"></i> Upload Video File</span>
                             <span class="badge bg-primary">Offline Mode</span>
                         </div>
@@ -626,19 +625,19 @@
                             <form id="video-upload-form" onsubmit="uploadAndProcessVideo(event)">
                                 <div class="mb-3">
                                     <label class="form-label small text-secondary">Or Upload MP4 / AVI / MOV file</label>
-                                    <input type="file" class="form-control form-control-sm bg-dark text-light border-secondary" id="video-file-input" accept="video/*">
+                                    <input type="file" class="form-control form-control-sm bg-white text-dark border" id="video-file-input" accept="video/*">
                                 </div>
                                 <div class="row g-2 mb-3">
                                     <div class="col-6">
                                         <label class="small text-secondary">Upscale Factor</label>
-                                        <select id="vid-scale" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                        <select id="vid-scale" class="form-select form-select-sm bg-white text-dark border">
                                             <option value="2.0" selected>2x Scaling</option>
                                             <option value="4.0">4x Scaling</option>
                                         </select>
                                     </div>
                                     <div class="col-6">
                                         <label class="small text-secondary">Policy</label>
-                                        <select id="vid-policy" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                        <select id="vid-policy" class="form-select form-select-sm bg-white text-dark border">
                                             <option value="OPENMP_STATIC" selected>OpenMP Static</option>
                                             <option value="OPENMP_DYNAMIC">OpenMP Dynamic</option>
                                             <option value="OPENMP_GUIDED">OpenMP Guided</option>
@@ -649,7 +648,7 @@
                                 <div class="row g-2 mb-3">
                                     <div class="col-6">
                                         <label class="small text-secondary">Method</label>
-                                        <select id="vid-method" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                        <select id="vid-method" class="form-select form-select-sm bg-white text-dark border">
                                             <option value="BICUBIC" selected>Bicubic</option>
                                             <option value="BILINEAR">Bilinear</option>
                                             <option value="NEAREST">Nearest Neighbour</option>
@@ -657,7 +656,7 @@
                                     </div>
                                     <div class="col-6">
                                         <label class="small text-secondary">Threads</label>
-                                        <select id="vid-threads" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                        <select id="vid-threads" class="form-select form-select-sm bg-white text-dark border">
                                             <option value="1">1 Thread</option>
                                             <option value="4">4 Threads</option>
                                             <option value="8" selected>8 Threads (Recommended)</option>
@@ -667,7 +666,7 @@
                                 </div>
                                 <div class="mb-3">
                                     <label class="small text-warning fw-bold"><i class="bi bi-magic me-1"></i> Multi-Scale CAS Super-Resolution</label>
-                                    <select id="vid-enhancement" class="form-select form-select-sm bg-dark text-warning border-warning">
+                                    <select id="vid-enhancement" class="form-select form-select-sm bg-white text-dark border-warning">
                                         <option value="3.5" selected>🔥 Extreme Super-Resolution (3.5x Boost - Ultra-HD Clarity / Recommended)</option>
                                         <option value="4.5">⚡ Maximum Cinematic Clarity (4.5x Boost - Extreme Sharpness)</option>
                                         <option value="2.5">✨ Balanced Super-Resolution (2.5x Boost)</option>
@@ -704,8 +703,8 @@
 
                 <!-- Right: Video Preview & Live Upscaling View -->
                 <div class="col-lg-8">
-                    <div class="card bg-black border-secondary h-100">
-                        <div class="card-header bg-dark fw-bold d-flex justify-content-between align-items-center">
+                    <div class="card bg-white border-secondary-subtle h-100">
+                        <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
                             <span><i class="bi bi-display me-1"></i> Video Processing & Reconstructed Output</span>
                             <div class="d-flex gap-2">
                                 <a id="vid-download-btn" href="/api/download_video" download="upscaled_video.mp4" class="btn btn-success btn-sm" style="display: none;">
@@ -726,7 +725,7 @@
                                     <span class="badge bg-warning text-dark"><i class="bi bi-cpu me-1"></i> Live C++ OpenMP Processing Frame</span>
                                     <span id="vid-live-res-badge" class="badge bg-secondary">Processing...</span>
                                 </div>
-                                <img id="vid-live-frame-img" src="" alt="Processing frame" class="img-fluid rounded border border-secondary w-100" style="max-height: 420px; object-fit: contain; background: #000;">
+                                <img id="vid-live-frame-img" src="" alt="Processing frame" class="img-fluid rounded border border-secondary-subtle w-100" style="max-height: 420px; object-fit: contain; background: #000;">
                             </div>
 
                             <!-- Reconstructed Frame Player -->
@@ -762,7 +761,7 @@
                                 </div>
                                 
                                 <!-- Frame Player Controls -->
-                                <div class="d-flex align-items-center gap-2 mt-2 bg-dark p-2 rounded border border-secondary">
+                                <div class="d-flex align-items-center gap-2 mt-2 bg-dark p-2 rounded border border-secondary-subtle">
                                     <button type="button" class="btn btn-primary btn-sm" id="vid-play-pause-btn" onclick="togglePlayerPlayback()">
                                         <i class="bi bi-play-fill" id="play-btn-icon"></i>
                                     </button>
@@ -772,7 +771,7 @@
                             </div>
 
                             <!-- Summary Card -->
-                            <div id="vid-summary-card" class="w-100 mt-3 p-3 bg-dark rounded border border-secondary" style="display: none;">
+                            <div id="vid-summary-card" class="w-100 mt-3 p-3 bg-dark rounded border border-secondary-subtle" style="display: none;">
                                 <h6 class="fw-bold text-info mb-2"><i class="bi bi-check2-circle me-1"></i> Processing Completed Successfully</h6>
                                 <div class="row g-2 small text-secondary">
                                     <div class="col-md-3">Resolution: <strong class="text-light" id="sum-res">--</strong></div>
@@ -792,8 +791,8 @@
             <div class="row g-3">
                 <!-- Left: Form Controls -->
                 <div class="col-lg-4">
-                    <div class="card bg-black border-secondary">
-                        <div class="card-header bg-dark fw-bold d-flex justify-content-between align-items-center">
+                    <div class="card bg-white border-secondary-subtle">
+                        <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
                             <span><i class="bi bi-person-bounding-box me-1"></i> Photo / Snapshot Upscaling</span>
                             <span class="badge bg-warning text-dark">Interview Proctoring</span>
                         </div>
@@ -813,19 +812,19 @@
                             <form id="photo-upload-form" onsubmit="uploadAndProcessPhoto(event)">
                                 <div class="mb-3">
                                     <label class="form-label small text-secondary">Or Upload Any Photo (JPG / PNG / WEBP)</label>
-                                    <input type="file" class="form-control form-control-sm bg-dark text-light border-secondary" id="photo-file-input" accept="image/*">
+                                    <input type="file" class="form-control form-control-sm bg-white text-dark border" id="photo-file-input" accept="image/*">
                                 </div>
                                 <div class="row g-2 mb-3">
                                     <div class="col-6">
                                         <label class="small text-secondary">Upscale Factor</label>
-                                        <select id="photo-scale" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                        <select id="photo-scale" class="form-select form-select-sm bg-white text-dark border">
                                             <option value="2.0" selected>2x Scaling (4x Pixels)</option>
                                             <option value="4.0">4x Ultra HD (16x Pixels)</option>
                                         </select>
                                     </div>
                                     <div class="col-6">
                                         <label class="small text-secondary">Policy</label>
-                                        <select id="photo-policy" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                        <select id="photo-policy" class="form-select form-select-sm bg-white text-dark border">
                                             <option value="OPENMP_STATIC" selected>OpenMP Static</option>
                                             <option value="OPENMP_DYNAMIC">OpenMP Dynamic</option>
                                             <option value="OPENMP_GUIDED">OpenMP Guided</option>
@@ -836,7 +835,7 @@
                                 <div class="row g-2 mb-3">
                                     <div class="col-6">
                                         <label class="small text-secondary">Method</label>
-                                        <select id="photo-method" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                        <select id="photo-method" class="form-select form-select-sm bg-white text-dark border">
                                             <option value="BICUBIC" selected>Bicubic (Best Edge)</option>
                                             <option value="BILINEAR">Bilinear (Smooth)</option>
                                             <option value="NEAREST">Nearest Neighbour</option>
@@ -844,7 +843,7 @@
                                     </div>
                                     <div class="col-6">
                                         <label class="small text-secondary">Threads</label>
-                                        <select id="photo-threads" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                        <select id="photo-threads" class="form-select form-select-sm bg-white text-dark border">
                                             <option value="1">1 Thread</option>
                                             <option value="4">4 Threads</option>
                                             <option value="8" selected>8 Threads</option>
@@ -854,7 +853,7 @@
                                 </div>
                                 <div class="mb-3">
                                     <label class="small text-warning fw-bold"><i class="bi bi-magic me-1"></i> Multi-Scale CAS Super-Resolution</label>
-                                    <select id="photo-enhancement" class="form-select form-select-sm bg-dark text-warning border-warning">
+                                    <select id="photo-enhancement" class="form-select form-select-sm bg-white text-dark border-warning">
                                         <option value="3.5" selected>🔥 Extreme Super-Resolution (3.5x Boost - Ultra-HD Clarity / Recommended)</option>
                                         <option value="4.5">⚡ Maximum Cinematic Clarity (4.5x Boost - Extreme Sharpness)</option>
                                         <option value="2.5">✨ Balanced Super-Resolution (2.5x Boost)</option>
@@ -872,8 +871,8 @@
 
                 <!-- Right: Photo Display & Before/After Comparison -->
                 <div class="col-lg-8">
-                    <div class="card bg-black border-secondary h-100">
-                        <div class="card-header bg-dark fw-bold d-flex justify-content-between align-items-center">
+                    <div class="card bg-white border-secondary-subtle h-100">
+                        <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
                             <span><i class="bi bi-images me-1"></i> Photo Upscaling & Pixel-Level Comparison</span>
                             <a id="photo-download-btn" href="#" download="upscaled_photo.jpg" class="btn btn-success btn-sm" style="display: none;">
                                 <i class="bi bi-download me-1"></i> Download Upscaled Photo
@@ -889,14 +888,14 @@
                             <!-- Photo Result Content -->
                             <div id="photo-result-box" style="display: none;">
                                 <!-- Exact Pixel Before & After Highlight Banner -->
-                                <div class="card bg-dark border-secondary p-3 mb-3">
+                                <div class="card bg-white border-secondary-subtle p-3 mb-3">
                                     <div class="row text-center g-2 align-items-center">
                                         <div class="col-md-5">
                                             <span class="text-secondary small d-block">BEFORE (Original Input)</span>
-                                            <h5 class="fw-bold text-light mb-0" id="photo-before-res">480x360</h5>
+                                            <h5 class="fw-bold text-dark mb-0" id="photo-before-res">480x360</h5>
                                             <div class="d-flex justify-content-center gap-2 mt-1">
                                                 <span class="badge bg-secondary" id="photo-before-px">172,800 Pixels</span>
-                                                <span class="badge bg-dark border border-secondary text-secondary" id="photo-src-sharpness-badge">Sharpness: --</span>
+                                                <span class="badge bg-dark border border-secondary-subtle text-secondary" id="photo-src-sharpness-badge">Sharpness: --</span>
                                             </div>
                                         </div>
                                         <div class="col-md-2">
@@ -966,9 +965,9 @@
                                 <!-- 2. Side-by-Side Dual View (Alternative) -->
                                 <div id="side-photo-container" class="row g-3 mb-3" style="display: none;">
                                     <div class="col-md-6">
-                                        <div class="card bg-black border-secondary p-2 h-100">
+                                        <div class="card bg-white border-secondary-subtle p-2 h-100">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <span class="small fw-bold text-light"><i class="bi bi-camera me-1"></i> Before (Original)</span>
+                                                <span class="small fw-bold text-dark"><i class="bi bi-camera me-1"></i> Before (Original)</span>
                                                 <span class="badge bg-secondary" id="photo-src-pill">480x360</span>
                                             </div>
                                             <div class="d-flex justify-content-center align-items-center bg-dark rounded overflow-hidden" style="min-height: 280px;">
@@ -977,7 +976,7 @@
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <div class="card bg-black border-secondary p-2 h-100">
+                                        <div class="card bg-white border-secondary-subtle p-2 h-100">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span class="small fw-bold text-primary"><i class="bi bi-stars me-1"></i> After (C++ OpenMP)</span>
                                                 <span class="badge bg-primary" id="photo-dst-pill">960x720</span>
@@ -990,7 +989,7 @@
                                 </div>
 
                                 <!-- Photo Performance Summary -->
-                                <div class="card bg-dark border-secondary p-2">
+                                <div class="card bg-white border-secondary-subtle p-2">
                                     <div class="row g-2 text-center small">
                                         <div class="col-md-3">Compute Latency: <strong class="text-light" id="photo-stat-lat">-- ms</strong></div>
                                         <div class="col-md-3">Algorithm: <strong class="text-warning" id="photo-stat-method">BICUBIC</strong></div>
@@ -1009,7 +1008,7 @@
     </div>
 
     <!-- Cache-busted JavaScript bundles -->
-    <script src="/static/js/app.js?v=13.0"></script>
+    <script src="/static/js/app.js?v=14.0"></script>
     <script src="/static/js/charts.js?v=12.0"></script>
 </body>
 </html>

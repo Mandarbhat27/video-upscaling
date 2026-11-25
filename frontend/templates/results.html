@@ -9,16 +9,16 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
-<body class="bg-dark text-light">
+<body class="bg-light text-dark">
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-secondary px-4 py-2 sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm px-4 py-2 sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/">
                 <i class="bi bi-cpu-fill text-primary fs-3"></i>
                 <span>VISIONBOOST</span>
                 <span class="badge bg-primary text-uppercase ms-1">Real-Time Visual Enhancement Engine</span>
-                <span class="badge bg-dark border border-secondary text-info ms-2">RIT Dept. of AI & DS</span>
+                
             </a>
             <div class="d-flex gap-3 align-items-center">
                 <a href="/" class="btn btn-outline-primary btn-sm"><i class="bi bi-speedometer2 me-1"></i> Live Dashboard</a>
@@ -30,17 +30,13 @@
 
     <div class="container-fluid px-4 py-3">
         <!-- Academic Header -->
-        <div class="d-flex justify-content-between align-items-start mb-4 pb-2 border-bottom border-secondary">
+        <div class="d-flex justify-content-between align-items-start mb-4 pb-2 border-bottom border-secondary-subtle">
             <div>
                 <h4 class="fw-bold mb-1 text-light">
                     <i class="bi bi-journal-bookmark-fill text-warning me-2"></i>Literature Review Synthesis & Empirical Performance Matrix
                 </h4>
-                <p class="text-secondary small mb-1">
-                    <strong>Course:</strong> Research Methodology & IPR (AL58) | <strong>Department:</strong> Artificial Intelligence & Data Science, Ramaiah Institute of Technology, Bangalore
-                </p>
-                <p class="text-info small mb-0">
-                    <span class="badge bg-secondary me-2">Supervisor: Dr. Vinay T. R., Associate Professor</span>
-                    <span><strong>Student Researchers:</strong> Mandar Bhat (1MS24AD038), M R Abhishek (1MS24AD036), Surajit Mondal (1MS24AD060)</span>
+                <p class="text-secondary small mb-0">
+                    High-Performance Multi-Core Parallel Video & Image Super-Resolution Architecture
                 </p>
             </div>
             <div class="d-flex gap-2">
@@ -57,9 +53,9 @@
         </div>
 
         <!-- SECTION 1: LITERATURE REVIEW SYNTHESIS TABLE (Table III from Report) -->
-        <div class="card bg-black border-secondary mb-4 shadow">
-            <div class="card-header bg-dark d-flex justify-content-between align-items-center py-2">
-                <span class="fw-bold text-light">
+        <div class="card bg-white border-secondary-subtle mb-4 shadow">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+                <span class="fw-bold text-dark">
                     <i class="bi bi-diagram-3-fill text-info me-2"></i>Table III: Literature Review Comparative Synthesis & Research Gap Resolution
                 </span>
                 <span class="badge bg-primary">5 Formal Papers + VisionBoost Engine</span>
@@ -82,7 +78,7 @@
                             <td class="text-center fw-bold text-secondary">[1]</td>
                             <td class="fw-semibold text-light">
                                 Lim et al. (2017)<br>
-                                <span class="badge bg-dark border border-secondary text-secondary" style="font-size: 0.68rem;">CVPRW 2017</span>
+                                <span class="badge bg-dark border border-secondary-subtle text-secondary" style="font-size: 0.68rem;">CVPRW 2017</span>
                             </td>
                             <td><span class="badge bg-secondary">Deep Learning / GPU</span></td>
                             <td class="text-light">EDSR / MDSR deep residual neural networks</td>
@@ -96,7 +92,7 @@
                             <td class="text-center fw-bold text-secondary">[2]</td>
                             <td class="fw-semibold text-light">
                                 Dong et al. (2020)<br>
-                                <span class="badge bg-dark border border-secondary text-secondary" style="font-size: 0.68rem;">J. Real-Time Image Proc.</span>
+                                <span class="badge bg-dark border border-secondary-subtle text-secondary" style="font-size: 0.68rem;">J. Real-Time Image Proc.</span>
                             </td>
                             <td><span class="badge bg-secondary">GPU (CUDA / cuDNN)</span></td>
                             <td class="text-light">UHD Super-resolution with GPU-oriented scheduling</td>
@@ -110,7 +106,7 @@
                             <td class="text-center fw-bold text-secondary">[3]</td>
                             <td class="fw-semibold text-light">
                                 Aydin et al. (2018)<br>
-                                <span class="badge bg-dark border border-secondary text-secondary" style="font-size: 0.68rem;">J. Supercomputing</span>
+                                <span class="badge bg-dark border border-secondary-subtle text-secondary" style="font-size: 0.68rem;">J. Supercomputing</span>
                             </td>
                             <td><span class="badge bg-secondary">OpenMP vs. CUDA</span></td>
                             <td class="text-light">Parallel image processing & chunk size tuning</td>
@@ -124,7 +120,7 @@
                             <td class="text-center fw-bold text-secondary">[4]</td>
                             <td class="fw-semibold text-light">
                                 Dolwithayaku et al. (2012)<br>
-                                <span class="badge bg-dark border border-secondary text-secondary" style="font-size: 0.68rem;">IJCA 2012</span>
+                                <span class="badge bg-dark border border-secondary-subtle text-secondary" style="font-size: 0.68rem;">IJCA 2012</span>
                             </td>
                             <td><span class="badge bg-secondary">Multi-Core CPU</span></td>
                             <td class="text-light">Total-variation video denoising (Distributor strategy)</td>
@@ -138,7 +134,7 @@
                             <td class="text-center fw-bold text-secondary">[5]</td>
                             <td class="fw-semibold text-light">
                                 Silva et al. (2018)<br>
-                                <span class="badge bg-dark border border-secondary text-secondary" style="font-size: 0.68rem;">IEEE MERCon 2018</span>
+                                <span class="badge bg-dark border border-secondary-subtle text-secondary" style="font-size: 0.68rem;">IEEE MERCon 2018</span>
                             </td>
                             <td><span class="badge bg-secondary">GPU (CUDA)</span></td>
                             <td class="text-light">Surveillance video enhancement & histogram equalization</td>
@@ -152,7 +148,7 @@
                             <td class="text-center fw-bold text-primary"><i class="bi bi-star-fill text-warning"></i></td>
                             <td class="fw-bold text-info">
                                 VisionBoost Engine<br>
-                                <span class="badge bg-primary" style="font-size: 0.7rem;">RIT AI & DS (2026)</span>
+                                <span class="badge bg-primary" style="font-size: 0.7rem;">VisionBoost Engine (2026)</span>
                             </td>
                             <td><span class="badge bg-info text-dark fw-bold">OpenMP C++17 + AVX2</span></td>
                             <td class="text-info fw-semibold">Hierarchical Multi-Scale SR + CLAHE + Denoise + OSD</td>
@@ -171,7 +167,7 @@
         <!-- Architectural Insights Callout -->
         <div class="row g-3 mb-4">
             <div class="col-md-3">
-                <div class="card bg-black border-secondary h-100 p-3">
+                <div class="card bg-white border-secondary-subtle h-100 p-3">
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <i class="bi bi-cpu text-primary fs-4"></i>
                         <h6 class="fw-bold mb-0 text-light">Shared Cache Locality</h6>
@@ -182,7 +178,7 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card bg-black border-secondary h-100 p-3">
+                <div class="card bg-white border-secondary-subtle h-100 p-3">
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <i class="bi bi-sliders text-success fs-4"></i>
                         <h6 class="fw-bold mb-0 text-light">Section 1.4 Objectives</h6>
@@ -193,18 +189,18 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card bg-black border-secondary h-100 p-3">
+                <div class="card bg-white border-secondary-subtle h-100 p-3">
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <i class="bi bi-camera-video text-warning fs-4"></i>
                         <h6 class="fw-bold mb-0 text-light">Surveillance RTSP / OSD</h6>
                     </div>
                     <p class="text-secondary small mb-0">
-                        Resolves the CCTV domain focus of Silva et al. [5] via live RTSP IP camera decoding, 24/7 campus gate demo loop, and official RIT-CAM-01 security timestamp OSD overlays.
+                        Resolves the CCTV domain focus of Silva et al. [5] via live RTSP IP camera decoding, 24/7 campus gate demo loop, and official SEC-CAM-01 security timestamp OSD overlays.
                     </p>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card bg-black border-secondary h-100 p-3">
+                <div class="card bg-white border-secondary-subtle h-100 p-3">
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <i class="bi bi-lightning-charge text-danger fs-4"></i>
                         <h6 class="fw-bold mb-0 text-light">144.9 FPS Throughput</h6>
@@ -217,16 +213,16 @@
         </div>
 
         <!-- SECTION 2: EMPIRICAL PERFORMANCE BENCHMARKS (OpenMP C++17) -->
-        <div class="card bg-black border-secondary mb-4 shadow">
-            <div class="card-header bg-dark d-flex justify-content-between align-items-center py-2">
-                <span class="fw-bold text-light">
+        <div class="card bg-white border-secondary-subtle mb-4 shadow">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+                <span class="fw-bold text-dark">
                     <i class="bi bi-speedometer text-success me-2"></i>Empirical Multi-Core Scalability & Thread Latency Evaluation
                 </span>
                 <span class="badge bg-secondary">Intel Core i5-12450H (12 Threads)</span>
             </div>
             <div class="card-body">
                 <!-- Mathematical Formula Explanations Callout -->
-                <div class="alert alert-dark border-secondary p-3 mb-3">
+                <div class="alert alert-light border-secondary-subtle p-3 mb-3">
                     <div class="row g-3">
                         <div class="col-md-4">
                             <strong class="text-info"><i class="bi bi-calculator me-1"></i> Speedup Formula:</strong>
@@ -249,8 +245,8 @@
                 <!-- Graphs Section -->
                 <div class="row g-3 mb-3">
                     <div class="col-lg-6">
-                        <div class="card bg-dark border-secondary h-100">
-                            <div class="card-header bg-black fw-bold text-light">
+                        <div class="card bg-white border-secondary-subtle h-100">
+                            <div class="card-header bg-white fw-bold text-dark">
                                 <i class="bi bi-bar-chart-fill me-1 text-primary"></i> Speedup vs. OpenMP Thread Allocation (1 to 12 Threads)
                             </div>
                             <div class="card-body">
@@ -259,8 +255,8 @@
                         </div>
                     </div>
                     <div class="col-lg-6">
-                        <div class="card bg-dark border-secondary h-100">
-                            <div class="card-header bg-black fw-bold text-light">
+                        <div class="card bg-white border-secondary-subtle h-100">
+                            <div class="card-header bg-white fw-bold text-dark">
                                 <i class="bi bi-graph-up-arrow me-1 text-success"></i> Parallel Efficiency vs. Thread Allocation (%)
                             </div>
                             <div class="card-body">
@@ -271,8 +267,8 @@
                 </div>
 
                 <!-- Detailed Table -->
-                <div class="card bg-black border-secondary">
-                    <div class="card-header bg-dark fw-bold d-flex justify-content-between align-items-center py-2">
+                <div class="card bg-white border-secondary-subtle">
+                    <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center py-2">
                         <span class="text-light"><i class="bi bi-table me-1"></i> Comprehensive OpenMP Latency & Throughput Measurements</span>
                         <span class="badge bg-secondary" id="record-count-badge">Loading Records...</span>
                     </div>
@@ -303,12 +299,12 @@
         </div>
 
         <!-- Academic Footer -->
-        <footer class="mt-4 pt-3 border-top border-secondary text-center text-secondary small">
+        <footer class="mt-4 pt-3 border-top border-secondary-subtle-subtle text-center text-muted small">
             <p class="mb-1">
-                <strong>VISIONBOOST: Real-Time Visual Enhancement Engine</strong> | Course AL58: Research Methodology & Intellectual Property Rights
+                <strong>VISIONBOOST: Real-Time Visual Enhancement Engine</strong>
             </p>
             <p class="mb-0">
-                Department of Artificial Intelligence & Data Science, Ramaiah Institute of Technology (RIT), Bangalore - 560054
+                High-Throughput Multi-Core Image & Video Super-Resolution Architecture
             </p>
         </footer>
     </div>
