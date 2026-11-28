@@ -90,9 +90,12 @@
                         <!-- Scale Factor -->
                         <div class="col-auto border-start border-secondary-subtle ps-3">
                             <label class="small text-secondary d-block">Upscale Factor</label>
-                            <select id="ctrl-scale" class="form-select form-select-sm bg-white text-dark border" onchange="updateControls()">
-                                <option value="2.0" selected>2x Scaling</option>
-                                <option value="4.0">4x Scaling</option>
+                            <select id="ctrl-scale" class="form-select form-select-sm bg-white text-dark border fw-bold text-primary" onchange="updateControls()">
+                                <option value="1080p" selected>💎 Full HD 1080p (Crystal Clear AI - 1920x1080)</option>
+                                <option value="720p">⚡ HD 720p (High Speed - 1280x720)</option>
+                                <option value="4k">🔥 Ultra HD 4K (3840x2160)</option>
+                                <option value="4.0">✨ 4x Super-Resolution</option>
+                                <option value="2.0">⚪ 2x Standard Scaling</option>
                             </select>
                         </div>
 
@@ -122,11 +125,11 @@
                         <!-- Edge Sharpening Boost -->
                         <div class="col-auto">
                             <label class="small text-warning d-block"><i class="bi bi-magic me-1"></i>Detail Boost</label>
-                            <select id="ctrl-enhancement" class="form-select form-select-sm bg-white text-dark border-warning" onchange="updateControls()">
-                                <option value="3.5" selected>🔥 Extreme Super-Resolution (+3.5x)</option>
-                                <option value="4.5">⚡ Cinematic Maximum (+4.5x)</option>
+                            <select id="ctrl-enhancement" class="form-select form-select-sm bg-white text-dark border-warning fw-semibold" onchange="updateControls()">
+                                <option value="3.5" selected>💎 Crystal Clear AI Enhancer (Remini/Topaz Style)</option>
+                                <option value="4.5">⚡ Cinematic Maximum Detail (+4.5x)</option>
                                 <option value="2.0">✨ Balanced Super-Res (+2.0x)</option>
-                                <option value="0.0">⚪ Off (Pure Bicubic)</option>
+                                <option value="0.0">⚪ Off (Standard Interpolation)</option>
                             </select>
                         </div>
 
@@ -291,7 +294,7 @@
                         <span class="badge bg-success ms-1" id="stat-px-gain">+300% Data</span>
                     </div>
                     <div class="col-md-3 border-end border-secondary-subtle">
-                        <span class="text-secondary d-block">Edge Definition (Laplacian Energy)</span>
+                        <span class="text-secondary d-block">AI Video Restoration & Clarity</span>
                         <strong class="text-warning" id="stat-edge-gain">Calculating...</strong>
                     </div>
                     <div class="col-md-3">
@@ -598,7 +601,7 @@
                     <div class="card bg-white border-secondary-subtle p-2 text-center h-100">
                         <span class="text-secondary small">Clarity Enhancement</span>
                         <h3 class="fw-bold text-info mb-0" id="cctv-stat-gain">+1,477%</h3>
-                        <span class="text-muted small">Laplacian Edge Energy</span>
+                        <span class="text-muted small">AI Detail Restoration Active</span>
                     </div>
                 </div>
             </div>
@@ -628,9 +631,12 @@
                                 <div class="row g-2 mb-3">
                                     <div class="col-6">
                                         <label class="small text-secondary">Upscale Factor</label>
-                                        <select id="vid-scale" class="form-select form-select-sm bg-white text-dark border">
-                                            <option value="2.0" selected>2x Scaling</option>
-                                            <option value="4.0">4x Scaling</option>
+                                        <select id="vid-scale" class="form-select form-select-sm bg-white text-dark border fw-bold text-primary">
+                                            <option value="1080p" selected>💎 Full HD 1080p (Crystal Clear AI - 1920x1080)</option>
+                                            <option value="720p">⚡ HD 720p (High Speed - 1280x720)</option>
+                                            <option value="4k">🔥 Ultra HD 4K (3840x2160)</option>
+                                            <option value="4.0">✨ 4x Super-Resolution</option>
+                                            <option value="2.0">⚪ 2x Standard Scaling</option>
                                         </select>
                                     </div>
                                     <div class="col-6">
@@ -664,12 +670,12 @@
                                 </div>
                                 <div class="mb-3">
                                     <label class="small text-warning fw-bold"><i class="bi bi-magic me-1"></i> Multi-Scale CAS Super-Resolution</label>
-                                    <select id="vid-enhancement" class="form-select form-select-sm bg-white text-dark border-warning">
-                                        <option value="3.5" selected>🔥 Extreme Super-Resolution (3.5x Boost - Ultra-HD Clarity / Recommended)</option>
-                                        <option value="4.5">⚡ Maximum Cinematic Clarity (4.5x Boost - Extreme Sharpness)</option>
+                                    <select id="vid-enhancement" class="form-select form-select-sm bg-white text-dark border-warning fw-semibold">
+                                        <option value="3.5" selected>💎 Crystal Clear AI Enhancer (Remini/Topaz Style - Recommended)</option>
+                                        <option value="4.5">⚡ Cinematic Maximum Detail (4.5x Boost - Extreme Sharpness)</option>
                                         <option value="2.5">✨ Balanced Super-Resolution (2.5x Boost)</option>
                                         <option value="1.5">🌿 Natural Detail (1.5x Boost)</option>
-                                        <option value="0.0">⚪ Pure Bicubic Interpolation (No Super-Res)</option>
+                                        <option value="0.0">⚪ Off (Pure Interpolation)</option>
                                     </select>
                                 </div>
                                 <div class="form-check form-switch mb-3">
@@ -815,9 +821,12 @@
                                 <div class="row g-2 mb-3">
                                     <div class="col-6">
                                         <label class="small text-secondary">Upscale Factor</label>
-                                        <select id="photo-scale" class="form-select form-select-sm bg-white text-dark border">
-                                            <option value="2.0" selected>2x Scaling (4x Pixels)</option>
-                                            <option value="4.0">4x Ultra HD (16x Pixels)</option>
+                                        <select id="photo-scale" class="form-select form-select-sm bg-white text-dark border fw-bold text-primary">
+                                            <option value="1080p" selected>💎 Full HD 1080p (Crystal Clear AI - 1920x1080)</option>
+                                            <option value="720p">⚡ HD 720p (High Speed - 1280x720)</option>
+                                            <option value="4k">🔥 Ultra HD 4K (3840x2160)</option>
+                                            <option value="4.0">✨ 4x Super-Resolution</option>
+                                            <option value="2.0">⚪ 2x Standard Scaling</option>
                                         </select>
                                     </div>
                                     <div class="col-6">
@@ -1006,7 +1015,7 @@
     </div>
 
     <!-- Cache-busted JavaScript bundles -->
-    <script src="/static/js/app.js?v=15.0"></script>
+    <script src="/static/js/app.js?v=17.0"></script>
     <script src="/static/js/charts.js?v=12.0"></script>
 </body>
 </html>

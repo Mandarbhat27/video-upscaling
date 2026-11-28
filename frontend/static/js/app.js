@@ -577,7 +577,7 @@ function pollMetrics() {
                 document.getElementById('cctv-upscaled-res-pill').innerText = (data.upscaled_res || '1280x720') + ' (' + data.scale_factor + 'x)';
             }
             if (document.getElementById('cctv-stat-gain')) {
-                document.getElementById('cctv-stat-gain').innerText = data.sharpness_gain_pct || '+1,477%';
+                document.getElementById('cctv-stat-gain').innerText = data.clarity_badge || '💎 Crystal Clear 1080p';
             }
 
             const badge = document.getElementById('stat-adaptive-badge');

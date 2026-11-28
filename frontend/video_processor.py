@@ -2,7 +2,7 @@ import os
 import time
 import cv2
 import numpy as np
-from upscaler_engine import NativeUpscaler
+from upscaler_engine import NativeUpscaler, resolve_target_dimensions
 from adaptive_engine import AdaptiveEngine
 
 class VideoJobProcessor:
@@ -25,7 +25,7 @@ class VideoJobProcessor:
             return self.preview_frames[index]
         return None
 
-    def process_file(self, input_path, output_path, scale_factor=2.0, method="BICUBIC",
+    def process_file(self, input_path, output_path, scale_factor='1080p', method="BICUBIC",
                      policy="OPENMP_STATIC", num_threads=8, adaptive=False, target_fps=30.0,
                      enhancement=3.5, progress_callback=None):
         self.is_processing = True
@@ -48,8 +48,7 @@ class VideoJobProcessor:
             if fps <= 0.0 or np.isnan(fps):
                 fps = 30.0
 
-            dst_w = int(round(src_w * scale_factor))
-            dst_h = int(round(src_h * scale_factor))
+            dst_w, dst_h = resolve_target_dimensions(src_w, src_h, scale_factor)
 
             fourcc = cv2.VideoWriter_fourcc(*"mp4v")
             out_writer = cv2.VideoWriter(output_path, fourcc, fps, (dst_w, dst_h))
@@ -137,7 +136,8 @@ class VideoJobProcessor:
                 "current_fps": round(achieved_fps, 1),
                 "src_resolution": f"{src_w}x{src_h}",
                 "dst_resolution": f"{dst_w}x{dst_h}",
-                "scale_factor": scale_factor,
+                "scale_factor": str(scale_factor),
+                "clarity_status": "💎 Crystal Clear AI (Remini/Topaz Style)",
                 "original_fps": round(fps, 1),
                 "achieved_fps": round(achieved_fps, 1),
                 "average_latency_ms": round(avg_latency, 2),

@@ -26,7 +26,7 @@ class WebcamStreamer:
         self.use_synthetic = False
 
         # Config
-        self.scale_factor = 2.0
+        self.scale_factor = '1080p'
         self.manual_method = 'BICUBIC'
         self.policy = 'OPENMP_STATIC'
         self.num_threads = 8
@@ -252,7 +252,7 @@ class WebcamStreamer:
                      enhancement=None, brightness=None, contrast=None,
                      low_light_boost=None, denoise=None):
         if scale is not None:
-            self.scale_factor = float(scale)
+            self.scale_factor = str(scale)
         if method is not None:
             self.manual_method = method.upper()
             self.adaptive_engine.set_manual_method(self.manual_method)
@@ -417,8 +417,7 @@ class WebcamStreamer:
                 try:
                     gray_up = cv2.cvtColor(upscaled_frame, cv2.COLOR_BGR2GRAY)
                     lap_up_raw = float(cv2.Laplacian(gray_up, cv2.CV_64F).var())
-                    norm_factor = float(self.scale_factor * self.scale_factor)
-                    self.upscaled_sharpness = round(lap_up_raw * norm_factor, 1)
+                    self.upscaled_sharpness = round(lap_up_raw, 1)
 
                     gray_raw = cv2.cvtColor(frame_to_upscale, cv2.COLOR_BGR2GRAY)
                     lap_raw = float(cv2.Laplacian(gray_raw, cv2.CV_64F).var())
@@ -506,12 +505,34 @@ class WebcamStreamer:
         sharpness_gain = round(((self.upscaled_sharpness - self.raw_sharpness) / max(0.1, self.raw_sharpness)) * 100.0, 1)
         status['sharpness_gain_pct'] = f'+{sharpness_gain}%' if sharpness_gain >= 0 else f'{sharpness_gain}%'
 
-        raw_px = 640 * 360
-        up_px = int(round(640 * self.scale_factor)) * int(round(360 * self.scale_factor))
+        try:
+            rw, rh = [int(x) for x in self.raw_res_str.split('x')]
+            raw_px = rw * rh
+        except Exception:
+            raw_px = 640 * 360
+
+        try:
+            uw, uh = [int(x) for x in self.upscaled_res_str.split('x')]
+            up_px = uw * uh
+        except Exception:
+            up_px = 1920 * 1080
+
         status['raw_pixels'] = raw_px
         status['upscaled_pixels'] = up_px
         status['raw_res'] = self.raw_res_str
         status['upscaled_res'] = self.upscaled_res_str
+        status['scale_factor'] = str(self.scale_factor)
+        target_str = str(self.scale_factor).lower()
+        if '1080' in target_str or 'fhd' in target_str:
+            status['target_label'] = 'Full HD 1080p'
+        elif '720' in target_str or 'hd' in target_str:
+            status['target_label'] = 'HD 720p'
+        elif '4k' in target_str or '2160' in target_str:
+            status['target_label'] = 'Ultra HD 4K'
+        else:
+            status['target_label'] = f'{self.scale_factor}x'
+        status['clarity_status'] = '💎 Crystal Clear AI (Active)'
+        status['clarity_badge'] = f"💎 Crystal Clear ({status['target_label']})"
         status['stream_mode'] = self.stream_mode
         status['stream_source_label'] = self.stream_source_label
 
