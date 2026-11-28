@@ -118,33 +118,58 @@ class WebcamStreamer:
             self.has_recorded_video = False
 
         if mode in ['cctv', 'cctv_url']:
-            if self.stream_url:
-                # Live RTSP / HTTP IP Camera
+            raw_url = (self.stream_url or '').strip()
+            if not raw_url:
+                self.last_error_msg = "Please enter your camera stream URL or IP address (e.g. http://192.168.1.38:8080/video)."
+                print(f"[ERROR] {self.last_error_msg}")
+                self.is_running = False
+                return False
+
+            # Smart URL normalization for phone IP Webcam & RTSP streams
+            if not (raw_url.startswith('http://') or raw_url.startswith('https://') or raw_url.startswith('rtsp://')):
+                raw_url = 'http://' + raw_url
+
+            candidate_urls = [raw_url]
+
+            # If user entered IP Webcam address without /video (e.g. http://192.168.1.38:8080)
+            if ':8080' in raw_url:
+                base = raw_url.rstrip('/')
+                if not base.endswith('/video') and not base.endswith('/shot.jpg'):
+                    candidate_urls.insert(0, base + '/video')
+                    candidate_urls.append(base + '/video?dummy=param.mjpg')
+                    candidate_urls.append(base + '/shot.jpg')
+
+            connected = False
+            for test_u in candidate_urls:
                 try:
-                    self.cap = cv2.VideoCapture(self.stream_url)
-                    if self.cap.isOpened():
-                        self.use_synthetic = False
-                        self.stream_source_label = f'Live IP/CCTV: {self.stream_url}'
-                        print(f'[INFO] Connected to live IP/CCTV stream: {self.stream_url}')
-                    else:
-                        print(f'[WARN] Could not connect to {self.stream_url}. Falling back to campus CCTV feed.')
-                        sample_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'uploads', 'sample-10s-360p.mp4'))
-                        self.cap = cv2.VideoCapture(sample_path)
-                        self.is_looping_video = True
-                        self.use_synthetic = not (self.cap and self.cap.isOpened())
-                        self.stream_source_label = 'Security Camera 01 [Live Demo]'
+                    print(f"[INFO] Connecting to real-time live camera: {test_u}")
+                    cap = cv2.VideoCapture(test_u)
+                    if cap.isOpened():
+                        # Set low buffer size to eliminate stream lag
+                        cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+                        ret, test_frame = cap.read()
+                        if ret and test_frame is not None and test_frame.size > 0:
+                            self.cap = cap
+                            self.stream_url = test_u
+                            self.use_synthetic = False
+                            self.is_looping_video = False
+                            self.stream_source_label = f'Live Phone Camera: {test_u}'
+                            print(f"[INFO] Successfully connected to REAL-TIME camera feed: {test_u} ({test_frame.shape[1]}x{test_frame.shape[0]})")
+                            connected = True
+                            break
+                        else:
+                            cap.release()
                 except Exception as e:
-                    print(f'[ERROR] Failed to open stream {self.stream_url}: {e}')
-                    self.use_synthetic = True
-                    self.stream_source_label = 'CCTV Failover Synthetic'
-            else:
-                # No URL provided -> fallback to Campus Gate sample simulation
-                sample_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'uploads', 'sample-10s-360p.mp4'))
-                self.cap = cv2.VideoCapture(sample_path)
-                self.is_looping_video = True
-                self.use_synthetic = not (self.cap and self.cap.isOpened())
-                self.stream_source_label = 'Security Camera 01 [Live Demo]'
-                print(f'[INFO] Activated Surveillance Simulation Feed ({sample_path}).')
+                    print(f"[WARN] Failed probing {test_u}: {e}")
+
+            if not connected:
+                self.cap = None
+                self.is_running = False
+                self.use_synthetic = False
+                self.is_looping_video = False
+                self.last_error_msg = f"Could not connect to {raw_url}. Please ensure: 1) Your phone IP Webcam server is running. 2) Phone and laptop are on the same Wi-Fi. 3) Address is http://{raw_url.split('://')[-1].rstrip('/')}/video"
+                print(f"[ERROR] {self.last_error_msg}")
+                return False
         else:
             # Standard Webcam Mode
             self.stream_mode = 'webcam'

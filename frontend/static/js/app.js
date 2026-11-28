@@ -80,12 +80,12 @@ function setCCTVPreset(preset) {
     const urlInput = document.getElementById('cctv-stream-url');
 
     if (preset === 'phone') {
-        if (ipInput) ipInput.value = '192.168.1.15';
+        if (ipInput) ipInput.value = '192.168.1.38';
         if (portInput) portInput.value = '8080';
         if (userInput) userInput.value = '';
         if (passInput) passInput.value = '';
         if (pathInput) pathInput.value = '/video';
-        if (urlInput) urlInput.value = 'http://192.168.1.15:8080/video';
+        if (urlInput) urlInput.value = 'http://192.168.1.38:8080/video';
     } else if (preset === 'rtsp') {
         if (ipInput) ipInput.value = '192.168.1.64';
         if (portInput) portInput.value = '554';
@@ -236,7 +236,7 @@ function toggleCamera(mode = 'webcam', streamUrl = '') {
                         metricsInterval = setInterval(pollMetrics, 300);
                     }
                 } else {
-                    alert('Camera could not be started: ' + (data.message || 'Check terminal'));
+                    alert('⚠️ Live Camera Connection Failed:\n' + (data.message || 'Could not connect to camera') + '\n\nSteps to check on your phone:\n1. Open IP Webcam app and tap \'Start server\' at the bottom.\n2. Make sure your phone and laptop are connected to the SAME Wi-Fi network.\n3. Check that the URL is: http://192.168.1.38:8080/video');
                     if (btn) {
                         btn.classList.remove('btn-danger');
                         btn.classList.add(isCCTV ? 'btn-warning' : 'btn-success');

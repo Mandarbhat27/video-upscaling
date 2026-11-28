@@ -59,8 +59,15 @@ def start_camera():
     mode = data.get('mode', 'webcam')
     stream_url = data.get('stream_url', '')
     success = webcam_worker.start(mode=mode, stream_url=stream_url)
+    err_msg = getattr(webcam_worker, 'last_error_msg', 'Could not open camera stream')
+    if not success:
+        return jsonify({
+            'status': 'error',
+            'message': err_msg,
+            'mode': mode
+        }), 400
     return jsonify({
-        'status': 'ok' if success else 'error',
+        'status': 'ok',
         'mode': mode,
         'source_label': webcam_worker.stream_source_label
     })
