@@ -48,3 +48,7 @@ results/*
 .idea/
 .DS_Store
 Thumbs.db
+
+# Temporary scratch testing
+scratch/
+
